@@ -1,0 +1,10 @@
+style:
+  MagicNumber:
+    active: false
+  UnusedPrivateMember:
+    ignoreAnnotated:
+      - Preview
+
+naming:
+  FunctionNaming:
+    active: false

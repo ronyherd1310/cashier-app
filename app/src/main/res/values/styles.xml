@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.PhotoCheckout" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:colorAccent">#009B8F</item>
+    </style>
+</resources>
