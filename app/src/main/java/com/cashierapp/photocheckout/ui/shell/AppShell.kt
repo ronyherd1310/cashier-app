@@ -2,7 +2,6 @@ package com.cashierapp.photocheckout.ui.shell
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -20,12 +19,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import com.cashierapp.photocheckout.ui.catalog.list.CatalogListRoute
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 
 @Composable
 public fun AppShell(
     modifier: Modifier = Modifier,
     destinations: List<AppDestination> = AppDestinations,
+    catalogueContent: @Composable () -> Unit = {
+        CatalogListRoute(onAddProductClick = {})
+    },
 ) {
     var selectedLabel by rememberSaveable { mutableStateOf(DEFAULT_DESTINATION_LABEL) }
     val selectedDestination =
@@ -43,24 +46,25 @@ public fun AppShell(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { contentPadding ->
-        PlaceholderDestination(
-            destination = selectedDestination,
-            contentPadding = contentPadding,
-        )
+        Column(modifier = Modifier.padding(contentPadding)) {
+            if (selectedDestination.label == DEFAULT_DESTINATION_LABEL) {
+                catalogueContent()
+            } else {
+                PlaceholderDestination(destination = selectedDestination)
+            }
+        }
     }
 }
 
 @Composable
 private fun PlaceholderDestination(
     destination: AppDestination,
-    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(contentPadding)
                 .padding(AppDimens.screenPadding),
         verticalArrangement = Arrangement.Top,
     ) {
