@@ -26,6 +26,10 @@ public interface ProductDao {
     public fun observeActiveProducts(): Flow<List<ProductWithPhotos>>
 
     @Transaction
+    @Query("SELECT * FROM products ORDER BY name COLLATE NOCASE ASC")
+    public fun observeProducts(): Flow<List<ProductWithPhotos>>
+
+    @Transaction
     @Query("SELECT * FROM products WHERE id = :id LIMIT 1")
     public suspend fun getById(id: Long): ProductWithPhotos?
 

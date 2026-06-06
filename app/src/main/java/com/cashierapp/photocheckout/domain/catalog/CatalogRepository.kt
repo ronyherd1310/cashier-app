@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 public interface CatalogRepository {
     public fun observeActiveProducts(): Flow<List<CatalogItem>>
 
+    public fun observeProducts(): Flow<List<CatalogItem>>
+
     public suspend fun getById(id: Long): CatalogItem?
 
     public suspend fun getBySku(sku: String): CatalogItem?

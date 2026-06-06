@@ -14,6 +14,11 @@ public class ProductRepository(
             products.map(ProductWithPhotos::toDomain)
         }
 
+    override fun observeProducts(): Flow<List<CatalogItem>> =
+        dao.observeProducts().map { products ->
+            products.map(ProductWithPhotos::toDomain)
+        }
+
     override suspend fun getById(id: Long): CatalogItem? = dao.getById(id)?.toDomain()
 
     override suspend fun getBySku(sku: String): CatalogItem? = dao.getBySku(sku)?.toDomain()

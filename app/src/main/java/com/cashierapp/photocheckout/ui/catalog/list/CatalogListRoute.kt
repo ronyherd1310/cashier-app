@@ -17,5 +17,9 @@ public fun CatalogListRoute(
         state = state,
         onAddProductClick = onAddProductClick,
         onProductClick = onProductClick,
+        onQueryChange = viewModel::onQueryChange,
+        onStatusFilterChange = viewModel::onStatusFilterChange,
+        onSortOrderChange = viewModel::onSortOrderChange,
+        onProductActiveChange = viewModel::setActive,
     )
 }

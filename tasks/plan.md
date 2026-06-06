@@ -2,7 +2,7 @@
 
 > Scope: **Catalogue module only** (CAT-1…7) plus the shared project/app bootstrap it's the first to need.
 > Source: `SPEC.md` · UI designs: `docs/screen-capture/01..06`
-> Status: Plan for review (Spec-driven Phase 2). No code written yet.
+> Status: Implemented through Task 12. Full local verification passed on 2026-06-06 with Java 21.
 > Created: 2026-06-06
 
 ## Overview

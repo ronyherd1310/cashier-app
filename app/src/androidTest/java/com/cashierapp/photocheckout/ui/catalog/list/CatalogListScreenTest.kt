@@ -21,7 +21,7 @@ public class CatalogListScreenTest {
                 CatalogListScreen(
                     state =
                         CatalogListUiState(
-                            activeProducts =
+                            products =
                                 listOf(
                                     catalogItem(
                                         name = "Nasi Goreng Spesial",
@@ -53,7 +53,7 @@ public class CatalogListScreenTest {
         composeRule.setContent {
             PhotoCheckoutTheme {
                 CatalogListScreen(
-                    state = CatalogListUiState(activeProducts = emptyList()),
+                    state = CatalogListUiState(products = emptyList()),
                     onAddProductClick = {},
                 )
             }

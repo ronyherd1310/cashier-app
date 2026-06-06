@@ -12,6 +12,8 @@ internal class FakeCatalogRepository : CatalogRepository {
 
     override fun observeActiveProducts(): Flow<List<CatalogItem>> = products
 
+    override fun observeProducts(): Flow<List<CatalogItem>> = products
+
     override suspend fun getById(id: Long): CatalogItem? = products.value.firstOrNull { it.id == id }
 
     override suspend fun getBySku(sku: String): CatalogItem? = products.value.firstOrNull { it.sku == sku }

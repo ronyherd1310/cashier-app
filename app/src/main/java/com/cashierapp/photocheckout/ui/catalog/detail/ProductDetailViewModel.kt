@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
 import com.cashierapp.photocheckout.domain.model.CatalogItem
 import com.cashierapp.photocheckout.domain.money.IdrFormat
+import com.cashierapp.photocheckout.domain.usecase.SetProductActive
 import com.cashierapp.photocheckout.domain.usecase.UpdateProduct
 import com.cashierapp.photocheckout.domain.usecase.UpdateProductInput
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +21,7 @@ public class ProductDetailViewModel
     constructor(
         private val catalogRepository: CatalogRepository,
         private val updateProduct: UpdateProduct,
+        private val setProductActive: SetProductActive,
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(ProductDetailUiState())
         public val uiState: StateFlow<ProductDetailUiState> = mutableState
@@ -82,6 +84,18 @@ public class ProductDetailViewModel
                         priceMinor = IdrFormat.parse(mutableState.value.priceInput),
                         photoPaths = product.photos.dropLast(1).map { it.path },
                     ),
+                )
+                reload()
+            }
+        }
+
+        public fun toggleActive() {
+            val product = mutableState.value.product ?: return
+            viewModelScope.launch {
+                setProductActive(
+                    productId = product.id,
+                    active = !product.active,
+                    changedAt = System.currentTimeMillis(),
                 )
                 reload()
             }

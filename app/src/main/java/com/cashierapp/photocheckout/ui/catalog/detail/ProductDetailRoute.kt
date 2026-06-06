@@ -25,5 +25,6 @@ public fun ProductDetailRoute(
         onSave = viewModel::saveEdits,
         onAddPhoto = viewModel::addPlaceholderPhoto,
         onRemovePhoto = viewModel::removeLastPhoto,
+        onToggleActive = viewModel::toggleActive,
     )
 }
