@@ -4,6 +4,7 @@ camera = "1.5.0"
 coil = "2.7.0"
 composeBom = "2026.05.00"
 detekt = "1.23.8"
+espresso = "3.7.0"
 hilt = "2.57.2"
 junit = "4.13.2"
 junitExt = "1.2.1"
@@ -27,6 +28,7 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.16.0" }
+androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitExt" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
