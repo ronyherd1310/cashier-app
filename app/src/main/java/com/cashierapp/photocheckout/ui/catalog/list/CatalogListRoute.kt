@@ -8,6 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 public fun CatalogListRoute(
     onAddProductClick: () -> Unit,
+    onProductClick: (Long) -> Unit,
     viewModel: CatalogListViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -15,5 +16,6 @@ public fun CatalogListRoute(
     CatalogListScreen(
         state = state,
         onAddProductClick = onAddProductClick,
+        onProductClick = onProductClick,
     )
 }

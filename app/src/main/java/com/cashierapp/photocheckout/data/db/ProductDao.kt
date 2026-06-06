@@ -39,4 +39,7 @@ public interface ProductDao {
         active: Boolean,
         deactivatedAt: Long?,
     )
+
+    @Query("SELECT COUNT(*) + 1 FROM products")
+    public suspend fun nextSkuSequence(): Long
 }

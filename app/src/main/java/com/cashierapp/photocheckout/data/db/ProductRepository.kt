@@ -1,5 +1,6 @@
 package com.cashierapp.photocheckout.data.db
 
+import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
 import com.cashierapp.photocheckout.domain.model.CatalogItem
 import com.cashierapp.photocheckout.domain.model.ProductPhoto
 import kotlinx.coroutines.flow.Flow
@@ -7,17 +8,19 @@ import kotlinx.coroutines.flow.map
 
 public class ProductRepository(
     private val dao: ProductDao,
-) {
-    public fun observeActiveProducts(): Flow<List<CatalogItem>> =
+) : CatalogRepository {
+    override fun observeActiveProducts(): Flow<List<CatalogItem>> =
         dao.observeActiveProducts().map { products ->
             products.map(ProductWithPhotos::toDomain)
         }
 
-    public suspend fun getById(id: Long): CatalogItem? = dao.getById(id)?.toDomain()
+    override suspend fun getById(id: Long): CatalogItem? = dao.getById(id)?.toDomain()
 
-    public suspend fun getBySku(sku: String): CatalogItem? = dao.getBySku(sku)?.toDomain()
+    override suspend fun getBySku(sku: String): CatalogItem? = dao.getBySku(sku)?.toDomain()
 
-    public suspend fun insert(
+    override suspend fun nextSkuSequence(): Long = dao.nextSkuSequence()
+
+    override suspend fun insert(
         sku: String,
         name: String,
         priceMinor: Long,
@@ -43,7 +46,7 @@ public class ProductRepository(
         return productId
     }
 
-    public suspend fun update(product: CatalogItem) {
+    override suspend fun update(product: CatalogItem) {
         dao.updateProduct(
             ProductEntity(
                 id = product.id,
@@ -63,7 +66,7 @@ public class ProductRepository(
         )
     }
 
-    public suspend fun setActive(
+    override suspend fun setActive(
         productId: Long,
         active: Boolean,
         deactivatedAt: Long?,

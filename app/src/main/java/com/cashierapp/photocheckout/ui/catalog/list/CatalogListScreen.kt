@@ -1,6 +1,7 @@
 package com.cashierapp.photocheckout.ui.catalog.list
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import java.io.File
 public fun CatalogListScreen(
     state: CatalogListUiState,
     onAddProductClick: () -> Unit,
+    onProductClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -85,7 +87,10 @@ public fun CatalogListScreen(
                     items = state.activeProducts,
                     key = CatalogItem::sku,
                 ) { product ->
-                    CatalogProductCard(product = product)
+                    CatalogProductCard(
+                        product = product,
+                        onClick = { onProductClick(product.id) },
+                    )
                 }
             }
         }
@@ -142,9 +147,16 @@ private fun CatalogEmptyState() {
 }
 
 @Composable
-private fun CatalogProductCard(product: CatalogItem) {
+private fun CatalogProductCard(
+    product: CatalogItem,
+    onClick: () -> Unit,
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .testTag("catalog-card-menu-${product.sku}")
+                .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(AppDimens.cardRadius),
     ) {
@@ -178,7 +190,6 @@ private fun CatalogProductCard(product: CatalogItem) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    modifier = Modifier.testTag("catalog-card-menu-${product.sku}"),
                     text = "⋮",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

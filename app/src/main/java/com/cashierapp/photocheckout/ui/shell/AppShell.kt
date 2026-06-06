@@ -19,6 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import com.cashierapp.photocheckout.ui.catalog.add.AddProductRoute
+import com.cashierapp.photocheckout.ui.catalog.detail.ProductDetailRoute
 import com.cashierapp.photocheckout.ui.catalog.list.CatalogListRoute
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 
@@ -26,11 +28,11 @@ import com.cashierapp.photocheckout.ui.theme.AppDimens
 public fun AppShell(
     modifier: Modifier = Modifier,
     destinations: List<AppDestination> = AppDestinations,
-    catalogueContent: @Composable () -> Unit = {
-        CatalogListRoute(onAddProductClick = {})
-    },
+    catalogueContent: (@Composable () -> Unit)? = null,
 ) {
     var selectedLabel by rememberSaveable { mutableStateOf(DEFAULT_DESTINATION_LABEL) }
+    var catalogMode by rememberSaveable { mutableStateOf(CatalogMode.List) }
+    var selectedProductId by rememberSaveable { mutableStateOf<Long?>(null) }
     val selectedDestination =
         destinations.firstOrNull { it.label == selectedLabel }
             ?: destinations.first()
@@ -48,12 +50,43 @@ public fun AppShell(
     ) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
             if (selectedDestination.label == DEFAULT_DESTINATION_LABEL) {
-                catalogueContent()
+                if (catalogueContent != null) {
+                    catalogueContent()
+                } else {
+                    when (catalogMode) {
+                        CatalogMode.List ->
+                            CatalogListRoute(
+                                onAddProductClick = { catalogMode = CatalogMode.Add },
+                                onProductClick = { productId ->
+                                    selectedProductId = productId
+                                    catalogMode = CatalogMode.Detail
+                                },
+                            )
+
+                        CatalogMode.Add ->
+                            AddProductRoute(
+                                onBack = { catalogMode = CatalogMode.List },
+                                onSaved = { catalogMode = CatalogMode.List },
+                            )
+
+                        CatalogMode.Detail ->
+                            ProductDetailRoute(
+                                productId = selectedProductId ?: 0L,
+                                onBack = { catalogMode = CatalogMode.List },
+                            )
+                    }
+                }
             } else {
                 PlaceholderDestination(destination = selectedDestination)
             }
         }
     }
+}
+
+private enum class CatalogMode {
+    List,
+    Add,
+    Detail,
 }
 
 @Composable

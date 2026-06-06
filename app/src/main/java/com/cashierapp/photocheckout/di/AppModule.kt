@@ -5,6 +5,8 @@ import androidx.room.Room
 import com.cashierapp.photocheckout.data.db.CashierDatabase
 import com.cashierapp.photocheckout.data.db.ProductDao
 import com.cashierapp.photocheckout.data.db.ProductRepository
+import com.cashierapp.photocheckout.data.storage.PhotoStorage
+import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,4 +34,12 @@ public object AppModule {
 
     @Provides
     public fun provideProductRepository(productDao: ProductDao): ProductRepository = ProductRepository(productDao)
+
+    @Provides
+    public fun provideCatalogRepository(productRepository: ProductRepository): CatalogRepository = productRepository
+
+    @Provides
+    public fun providePhotoStorage(
+        @ApplicationContext context: Context,
+    ): PhotoStorage = PhotoStorage(context)
 }
