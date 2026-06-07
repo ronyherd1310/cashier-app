@@ -67,25 +67,30 @@ public fun DraftScreen(
         DraftTopBar(itemCount = state.itemCount, onBack = onBack, onDiscard = { showDiscardDialog = true })
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(state.lines, key = { it.sku }) { line ->
-                DraftLineRow(
-                    line = line,
-                    onClick = { onLineClick(line.sku) },
-                    resolvePhotoPath = resolvePhotoPath,
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        val isEmpty = state.lines.isEmpty() && state.unidentified.isEmpty()
+        if (isEmpty) {
+            DraftEmptyState(onScanAgain = onBack, modifier = Modifier.weight(1f))
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(state.lines, key = { it.sku }) { line ->
+                    DraftLineRow(
+                        line = line,
+                        onClick = { onLineClick(line.sku) },
+                        resolvePhotoPath = resolvePhotoPath,
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+                items(state.unidentified.size) { index ->
+                    UnidentifiedRow(item = state.unidentified[index], index = index)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
             }
-            items(state.unidentified.size) { index ->
-                UnidentifiedRow(item = state.unidentified[index], index = index)
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
-        }
 
-        TotalsSection(subtotalMinor = state.subtotalMinor, totalMinor = state.totalMinor)
-        Spacer(modifier = Modifier.height(AppDimens.spaceMd))
-        DraftActions(onAddItem = onAddItem, onConfirm = onConfirm)
-        Spacer(modifier = Modifier.height(AppDimens.spaceLg))
+            TotalsSection(subtotalMinor = state.subtotalMinor, totalMinor = state.totalMinor)
+            Spacer(modifier = Modifier.height(AppDimens.spaceMd))
+            DraftActions(onAddItem = onAddItem, onConfirm = onConfirm)
+            Spacer(modifier = Modifier.height(AppDimens.spaceLg))
+        }
     }
 
     if (showDiscardDialog) {
@@ -150,6 +155,39 @@ private fun DraftOverflowMenu(onDiscard: () -> Unit) {
                 onDiscard()
             },
         )
+    }
+}
+
+@Composable
+private fun DraftEmptyState(
+    onScanAgain: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().testTag("draft-empty-state"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "No items found",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(modifier = Modifier.height(AppDimens.spaceSm))
+        Text(
+            text = "We couldn't recognize any catalog items. Try again with the items spread flat.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(AppDimens.spaceLg))
+        Button(
+            modifier = Modifier.height(52.dp).testTag("draft-scan-again-button"),
+            onClick = onScanAgain,
+            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
+            shape = RoundedCornerShape(AppDimens.controlRadius),
+        ) {
+            Text("Scan again")
+        }
     }
 }
 

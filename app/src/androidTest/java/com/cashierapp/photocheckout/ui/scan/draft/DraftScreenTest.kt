@@ -90,6 +90,38 @@ public class DraftScreenTest {
     }
 
     @Test
+    public fun emptyDraftShowsNoItemsStateWithScanAgain() {
+        var scannedAgain = false
+        composeRule.setContent {
+            PhotoCheckoutTheme {
+                DraftScreen(
+                    state =
+                        DraftUiState(
+                            draft =
+                                DraftReceipt(
+                                    lines = emptyList(),
+                                    unidentified = emptyList(),
+                                    subtotalMinor = 0,
+                                    taxMinor = 0,
+                                    totalMinor = 0,
+                                ),
+                        ),
+                    onBack = { scannedAgain = true },
+                    onLineClick = {},
+                    onAddItem = {},
+                    onConfirm = {},
+                    onDiscardConfirmed = {},
+                    resolvePhotoPath = { it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("draft-empty-state").assertIsDisplayed()
+        composeRule.onNodeWithTag("draft-scan-again-button").performClick()
+        org.junit.Assert.assertTrue(scannedAgain)
+    }
+
+    @Test
     public fun discardRequiresConfirmationBeforeDiscarding() {
         var discarded = false
         setScreen(onDiscardConfirmed = { discarded = true })
