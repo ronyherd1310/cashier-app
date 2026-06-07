@@ -37,6 +37,18 @@ android {
         compose = true
     }
 
+    packaging {
+        resources {
+            excludes +=
+                setOf(
+                    "META-INF/LICENSE.md",
+                    "META-INF/LICENSE-notice.md",
+                    "META-INF/AL2.0",
+                    "META-INF/LGPL2.1",
+                )
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
