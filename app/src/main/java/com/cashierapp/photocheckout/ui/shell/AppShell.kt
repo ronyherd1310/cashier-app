@@ -30,6 +30,7 @@ import com.cashierapp.photocheckout.ui.scan.capture.ScanCaptureRoute
 import com.cashierapp.photocheckout.ui.scan.discarded.DraftDiscardedScreen
 import com.cashierapp.photocheckout.ui.scan.draft.DraftRoute
 import com.cashierapp.photocheckout.ui.scan.edit.EditItemRoute
+import com.cashierapp.photocheckout.ui.settings.SettingsRoute
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 
 @Composable
@@ -158,6 +159,8 @@ public fun AppShell(
                             },
                         )
                 }
+            } else if (selectedDestination.label == MORE_DESTINATION_LABEL) {
+                SettingsRoute()
             } else {
                 PlaceholderDestination(destination = selectedDestination)
             }

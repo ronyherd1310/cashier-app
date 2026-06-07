@@ -28,3 +28,5 @@ public val AppDestinations: List<AppDestination> =
 public const val DEFAULT_DESTINATION_LABEL: String = "Catalogue"
 
 public const val SCAN_DESTINATION_LABEL: String = "Scan"
+
+public const val MORE_DESTINATION_LABEL: String = "More"
