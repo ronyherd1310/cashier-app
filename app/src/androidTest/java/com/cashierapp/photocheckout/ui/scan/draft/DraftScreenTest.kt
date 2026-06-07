@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.cashierapp.photocheckout.domain.model.DraftLine
 import com.cashierapp.photocheckout.domain.model.DraftReceipt
 import com.cashierapp.photocheckout.domain.model.UnidentifiedItem
@@ -44,7 +45,7 @@ public class DraftScreenTest {
             totalMinor = 65_000,
         )
 
-    private fun setScreen() {
+    private fun setScreen(onDiscardConfirmed: () -> Unit = {}) {
         composeRule.setContent {
             PhotoCheckoutTheme {
                 DraftScreen(
@@ -53,7 +54,7 @@ public class DraftScreenTest {
                     onLineClick = {},
                     onAddItem = {},
                     onConfirm = {},
-                    onDiscard = {},
+                    onDiscardConfirmed = onDiscardConfirmed,
                     resolvePhotoPath = { it },
                 )
             }
@@ -86,5 +87,18 @@ public class DraftScreenTest {
         setScreen()
         composeRule.onNodeWithTag("draft-unidentified-0").assertIsDisplayed()
         composeRule.onNodeWithText("Unidentified item").assertIsDisplayed()
+    }
+
+    @Test
+    public fun discardRequiresConfirmationBeforeDiscarding() {
+        var discarded = false
+        setScreen(onDiscardConfirmed = { discarded = true })
+
+        composeRule.onNodeWithTag("draft-overflow-button").performClick()
+        composeRule.onNodeWithTag("draft-discard-menu-item").performClick()
+        composeRule.onNodeWithText("Discard draft?").assertIsDisplayed()
+        composeRule.onNodeWithText("Discard").performClick()
+
+        org.junit.Assert.assertTrue(discarded)
     }
 }

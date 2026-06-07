@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cashierapp.photocheckout.domain.model.UnidentifiedItem
 import com.cashierapp.photocheckout.domain.money.IdrFormat
+import com.cashierapp.photocheckout.ui.common.dialogs.ConfirmDialog
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 import com.cashierapp.photocheckout.ui.theme.TealPrimary
 
@@ -51,17 +52,19 @@ public fun DraftScreen(
     onLineClick: (String) -> Unit,
     onAddItem: () -> Unit,
     onConfirm: () -> Unit,
-    onDiscard: () -> Unit,
+    onDiscardConfirmed: () -> Unit,
     resolvePhotoPath: (String) -> String,
     modifier: Modifier = Modifier,
 ) {
+    var showDiscardDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier =
             modifier
                 .fillMaxSize()
                 .padding(horizontal = AppDimens.screenPadding),
     ) {
-        DraftTopBar(itemCount = state.itemCount, onBack = onBack, onDiscard = onDiscard)
+        DraftTopBar(itemCount = state.itemCount, onBack = onBack, onDiscard = { showDiscardDialog = true })
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         LazyColumn(modifier = Modifier.weight(1f)) {
@@ -83,6 +86,19 @@ public fun DraftScreen(
         Spacer(modifier = Modifier.height(AppDimens.spaceMd))
         DraftActions(onAddItem = onAddItem, onConfirm = onConfirm)
         Spacer(modifier = Modifier.height(AppDimens.spaceLg))
+    }
+
+    if (showDiscardDialog) {
+        ConfirmDialog(
+            title = "Discard draft?",
+            message = "All items will be deleted and no sale is created.",
+            confirmLabel = "Discard",
+            onConfirm = {
+                showDiscardDialog = false
+                onDiscardConfirmed()
+            },
+            onDismiss = { showDiscardDialog = false },
+        )
     }
 }
 

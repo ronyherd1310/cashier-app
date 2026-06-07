@@ -18,8 +18,8 @@ public fun DraftRoute(
     onBack: () -> Unit,
     onLineClick: (String) -> Unit,
     onAddItem: () -> Unit,
-    onConfirm: () -> Unit,
-    onDiscard: () -> Unit,
+    onConfirm: (DraftReceipt) -> Unit,
+    onDiscarded: () -> Unit,
     viewModel: DraftViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(draft) { viewModel.setDraft(draft) }
@@ -30,8 +30,11 @@ public fun DraftRoute(
         onBack = onBack,
         onLineClick = onLineClick,
         onAddItem = onAddItem,
-        onConfirm = onConfirm,
-        onDiscard = onDiscard,
+        onConfirm = { state.draft?.let(onConfirm) },
+        onDiscardConfirmed = {
+            viewModel.clear()
+            onDiscarded()
+        },
         resolvePhotoPath = viewModel::resolvePhotoPath,
     )
 }

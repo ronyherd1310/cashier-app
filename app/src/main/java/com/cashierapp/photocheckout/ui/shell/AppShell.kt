@@ -26,7 +26,9 @@ import com.cashierapp.photocheckout.ui.catalog.add.AddProductRoute
 import com.cashierapp.photocheckout.ui.catalog.detail.ProductDetailRoute
 import com.cashierapp.photocheckout.ui.catalog.list.CatalogListRoute
 import com.cashierapp.photocheckout.ui.scan.capture.ScanCaptureRoute
+import com.cashierapp.photocheckout.ui.scan.discarded.DraftDiscardedScreen
 import com.cashierapp.photocheckout.ui.scan.draft.DraftRoute
+import com.cashierapp.photocheckout.ui.scan.edit.EditItemRoute
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 
 @Composable
@@ -40,6 +42,7 @@ public fun AppShell(
     var selectedProductId by rememberSaveable { mutableStateOf<Long?>(null) }
     var scanMode by rememberSaveable { mutableStateOf(ScanMode.Capture) }
     var scanDraft by remember { mutableStateOf<DraftReceipt?>(null) }
+    var editingScanSku by rememberSaveable { mutableStateOf<String?>(null) }
     val selectedDestination =
         destinations.firstOrNull { it.label == selectedLabel }
             ?: destinations.first()
@@ -113,27 +116,45 @@ public fun AppShell(
                                     scanDraft = null
                                     scanMode = ScanMode.Capture
                                 },
-                                onLineClick = { scanMode = ScanMode.EditLine },
+                                onLineClick = { sku ->
+                                    editingScanSku = sku
+                                    scanMode = ScanMode.EditLine
+                                },
                                 onAddItem = { scanMode = ScanMode.AddItem },
                                 onConfirm = {
                                     // TODO(Module 3): hand finalized DraftReceipt to CommitSale.
                                     scanDraft = null
                                     scanMode = ScanMode.Capture
                                 },
-                                onDiscard = { scanMode = ScanMode.Discarded },
+                                onDiscarded = {
+                                    scanDraft = null
+                                    scanMode = ScanMode.Discarded
+                                },
                             )
                         }
                     }
 
-                    ScanMode.EditLine,
-                    ScanMode.AddItem,
-                    ScanMode.Discarded,
-                    ->
+                    ScanMode.EditLine ->
+                        EditItemRoute(
+                            sku = editingScanSku.orEmpty(),
+                            onDone = {
+                                editingScanSku = null
+                                scanMode = ScanMode.Draft
+                            },
+                        )
+
+                    ScanMode.AddItem ->
                         ScanDraftPlaceholder(
                             draft = scanDraft,
-                            onBack = {
-                                scanDraft = null
+                            onBack = { scanMode = ScanMode.Draft },
+                        )
+
+                    ScanMode.Discarded ->
+                        DraftDiscardedScreen(
+                            onNewScan = { scanMode = ScanMode.Capture },
+                            onBackToHome = {
                                 scanMode = ScanMode.Capture
+                                selectedLabel = DEFAULT_DESTINATION_LABEL
                             },
                         )
                 }
