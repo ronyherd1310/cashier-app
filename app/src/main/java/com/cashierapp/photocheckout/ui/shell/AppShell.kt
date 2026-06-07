@@ -26,6 +26,7 @@ import com.cashierapp.photocheckout.ui.catalog.add.AddProductRoute
 import com.cashierapp.photocheckout.ui.catalog.detail.ProductDetailRoute
 import com.cashierapp.photocheckout.ui.catalog.list.CatalogListRoute
 import com.cashierapp.photocheckout.ui.scan.capture.ScanCaptureRoute
+import com.cashierapp.photocheckout.ui.scan.draft.DraftRoute
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 
 @Composable
@@ -101,7 +102,29 @@ public fun AppShell(
                             },
                         )
 
-                    ScanMode.Draft,
+                    ScanMode.Draft -> {
+                        val draft = scanDraft
+                        if (draft == null) {
+                            scanMode = ScanMode.Capture
+                        } else {
+                            DraftRoute(
+                                draft = draft,
+                                onBack = {
+                                    scanDraft = null
+                                    scanMode = ScanMode.Capture
+                                },
+                                onLineClick = { scanMode = ScanMode.EditLine },
+                                onAddItem = { scanMode = ScanMode.AddItem },
+                                onConfirm = {
+                                    // TODO(Module 3): hand finalized DraftReceipt to CommitSale.
+                                    scanDraft = null
+                                    scanMode = ScanMode.Capture
+                                },
+                                onDiscard = { scanMode = ScanMode.Discarded },
+                            )
+                        }
+                    }
+
                     ScanMode.EditLine,
                     ScanMode.AddItem,
                     ScanMode.Discarded,

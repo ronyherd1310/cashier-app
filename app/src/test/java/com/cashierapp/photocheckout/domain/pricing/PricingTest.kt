@@ -1,6 +1,7 @@
 package com.cashierapp.photocheckout.domain.pricing
 
 import com.cashierapp.photocheckout.domain.model.CatalogItem
+import com.cashierapp.photocheckout.domain.model.ProductPhoto
 import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -123,6 +124,14 @@ public class PricingTest {
         assertEquals(100_000, draft.subtotalMinor)
         assertEquals(11_000, draft.taxMinor)
         assertEquals(111_000, draft.totalMinor)
+    }
+
+    @Test
+    public fun lineCarriesFirstCatalogPhotoForThumbnail() {
+        val withPhoto =
+            item("SKU-0001", 1_000).copy(photos = listOf(ProductPhoto("photos/a.jpg", 0)))
+        val draft = priceDraft(listOf(RecognizedItem("SKU-0001", 1, 0.9f)), mapOf("SKU-0001" to withPhoto))
+        assertEquals("photos/a.jpg", draft.lines.single().photoPath)
     }
 
     @Test

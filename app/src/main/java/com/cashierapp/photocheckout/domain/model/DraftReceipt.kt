@@ -27,6 +27,7 @@ public data class DraftLine(
     val confidence: Float,
     val lowConfidence: Boolean,
     val note: String? = null,
+    val photoPath: String? = null,
 )
 
 /**

@@ -48,6 +48,7 @@ public fun priceDraft(
                     lineTotalMinor = item.priceMinor * quantity,
                     confidence = detection.confidence,
                     lowConfidence = detection.confidence < CONFIDENCE_THRESHOLD,
+                    photoPath = item.photos.firstOrNull()?.path,
                 )
         }
     }
