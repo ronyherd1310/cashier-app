@@ -2,9 +2,12 @@ package com.cashierapp.photocheckout.domain.usecase
 
 import com.cashierapp.photocheckout.domain.model.CapturedImage
 import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
+import com.cashierapp.photocheckout.domain.telemetry.ScanTelemetry
+import com.cashierapp.photocheckout.domain.telemetry.ScanTelemetryEvent
 import com.cashierapp.photocheckout.recognizer.FakeRecognizer
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -83,6 +86,59 @@ public class ScanCounterTest {
             val result = scanCounter(image)
 
             assertTrue(result.isFailure)
+        }
+
+    @Test
+    public fun recordsTelemetryThroughTheScanPath() =
+        runTest {
+            val repo = FakeCatalogRepository()
+            seedCatalog(repo, "SKU-0001", 1_000)
+            val recognizer = FakeRecognizer()
+            recognizer.returns(
+                listOf(
+                    RecognizedItem("SKU-0001", 1, 0.9f),
+                    RecognizedItem("SKU-9999", 1, 0.9f),
+                ),
+            )
+            val recorded = mutableListOf<ScanTelemetryEvent>()
+            val telemetry =
+                object : ScanTelemetry {
+                    override fun record(event: ScanTelemetryEvent) {
+                        recorded += event
+                    }
+                }
+            val scanCounter = ScanCounter(repo, recognizer, telemetry)
+
+            scanCounter(image)
+
+            val event = recorded.single()
+            assertTrue(event.success)
+            assertEquals(1, event.itemCount)
+            assertEquals(1, event.unidentifiedCount)
+            assertTrue(event.latencyMs >= 0)
+        }
+
+    @Test
+    public fun recordsTelemetryOnFailure() =
+        runTest {
+            val repo = FakeCatalogRepository()
+            seedCatalog(repo, "SKU-0001", 1_000)
+            val recognizer = FakeRecognizer()
+            recognizer.fails(RuntimeException("boom"))
+            val recorded = mutableListOf<ScanTelemetryEvent>()
+            val telemetry =
+                object : ScanTelemetry {
+                    override fun record(event: ScanTelemetryEvent) {
+                        recorded += event
+                    }
+                }
+
+            ScanCounter(repo, recognizer, telemetry)(image)
+
+            val event = recorded.single()
+            assertNotNull(event)
+            assertEquals(false, event.success)
+            assertEquals(0, event.itemCount)
         }
 
     @Test

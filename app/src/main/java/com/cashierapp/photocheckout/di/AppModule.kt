@@ -8,9 +8,11 @@ import com.cashierapp.photocheckout.data.db.ProductRepository
 import com.cashierapp.photocheckout.data.image.AndroidImageDownscaler
 import com.cashierapp.photocheckout.data.recognizer.StubRecognizer
 import com.cashierapp.photocheckout.data.storage.PhotoStorage
+import com.cashierapp.photocheckout.data.telemetry.LoggingScanTelemetry
 import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
 import com.cashierapp.photocheckout.domain.image.ImageDownscaler
 import com.cashierapp.photocheckout.domain.recognizer.Recognizer
+import com.cashierapp.photocheckout.domain.telemetry.ScanTelemetry
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,4 +55,7 @@ public object AppModule {
     // TODO(T12): replace with config-driven selection between OpenRouterRecognizer (T10) and a fake.
     @Provides
     public fun provideRecognizer(recognizer: StubRecognizer): Recognizer = recognizer
+
+    @Provides
+    public fun provideScanTelemetry(telemetry: LoggingScanTelemetry): ScanTelemetry = telemetry
 }
