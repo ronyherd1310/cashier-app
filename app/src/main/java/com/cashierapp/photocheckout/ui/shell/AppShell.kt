@@ -25,6 +25,7 @@ import com.cashierapp.photocheckout.domain.model.DraftReceipt
 import com.cashierapp.photocheckout.ui.catalog.add.AddProductRoute
 import com.cashierapp.photocheckout.ui.catalog.detail.ProductDetailRoute
 import com.cashierapp.photocheckout.ui.catalog.list.CatalogListRoute
+import com.cashierapp.photocheckout.ui.scan.additem.AddItemRoute
 import com.cashierapp.photocheckout.ui.scan.capture.ScanCaptureRoute
 import com.cashierapp.photocheckout.ui.scan.discarded.DraftDiscardedScreen
 import com.cashierapp.photocheckout.ui.scan.draft.DraftRoute
@@ -144,9 +145,8 @@ public fun AppShell(
                         )
 
                     ScanMode.AddItem ->
-                        ScanDraftPlaceholder(
-                            draft = scanDraft,
-                            onBack = { scanMode = ScanMode.Draft },
+                        AddItemRoute(
+                            onDone = { scanMode = ScanMode.Draft },
                         )
 
                     ScanMode.Discarded ->
@@ -177,32 +177,6 @@ private enum class ScanMode {
     EditLine,
     AddItem,
     Discarded,
-}
-
-@Composable
-private fun ScanDraftPlaceholder(
-    draft: DraftReceipt?,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    // Temporary host until the Draft Review screen lands in T5.
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .padding(AppDimens.screenPadding),
-    ) {
-        Text(
-            modifier = Modifier.testTag("scan-draft-placeholder"),
-            text = "Draft ready: ${draft?.lines?.size ?: 0} item(s)",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(modifier = Modifier.height(AppDimens.spaceMd))
-        androidx.compose.material3.TextButton(onClick = onBack) {
-            Text(text = "Back to capture")
-        }
-    }
 }
 
 @Composable
