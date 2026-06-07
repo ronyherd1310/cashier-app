@@ -38,6 +38,8 @@ public fun AppShell(
     modifier: Modifier = Modifier,
     destinations: List<AppDestination> = AppDestinations,
     catalogueContent: (@Composable () -> Unit)? = null,
+    // Module 3 (Sales) plugs CommitSale in here; default is a no-op stub for the Scan module.
+    onConfirmDraft: (DraftReceipt) -> Unit = {},
 ) {
     var selectedLabel by rememberSaveable { mutableStateOf(DEFAULT_DESTINATION_LABEL) }
     var catalogMode by rememberSaveable { mutableStateOf(CatalogMode.List) }
@@ -123,8 +125,11 @@ public fun AppShell(
                                     scanMode = ScanMode.EditLine
                                 },
                                 onAddItem = { scanMode = ScanMode.AddItem },
-                                onConfirm = {
-                                    // TODO(Module 3): hand finalized DraftReceipt to CommitSale.
+                                onConfirm = { finalizedDraft ->
+                                    // Module 3 (Sales) hand-off seam: replace this stub with
+                                    // CommitSale(finalizedDraft) → Receipt (S5). No auto-commit
+                                    // happens before this explicit cashier action (SALE-1).
+                                    onConfirmDraft(finalizedDraft)
                                     scanDraft = null
                                     scanMode = ScanMode.Capture
                                 },
