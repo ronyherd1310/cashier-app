@@ -1,6 +1,6 @@
 # Catalogue Module — Task List
 
-> Scope: Catalogue module (CAT-1…7) + shared bootstrap. Full detail in `tasks/plan.md`.
+> Scope: Catalogue module (CAT-1…7) + shared bootstrap. Full detail in `tasks/catalogue-plan.md`.
 > Order is top-to-bottom (dependency-ordered). Don't cross a checkpoint until it's green + reviewed.
 
 ## Phase 0 — Project & App Foundation
@@ -46,7 +46,7 @@
 
 ---
 
-## Resolved decisions (see plan.md)
+## Resolved decisions (see catalogue-plan.md)
 - [x] Q1 SKU = fixed `SKU-` prefix + 4-digit counter (`SKU-0001`)
 - [x] Q2 Bottom nav = 5 tabs (Home·Catalogue·Scan·Sales·More), Settings under More
 - [x] Q3 Reactivation in scope (from inactive product detail)

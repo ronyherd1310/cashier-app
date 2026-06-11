@@ -2,6 +2,7 @@ package com.cashierapp.photocheckout.ui.catalog.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cashierapp.photocheckout.data.storage.PhotoStorage
 import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
 import com.cashierapp.photocheckout.domain.usecase.SetProductActive
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,8 +20,11 @@ public class CatalogListViewModel
     constructor(
         catalogRepository: CatalogRepository,
         private val setProductActive: SetProductActive,
+        private val photoStorage: PhotoStorage,
     ) : ViewModel() {
         private val filters = MutableStateFlow(CatalogListFilters())
+
+        public fun resolvePhotoPath(path: String): String = photoStorage.absolutePath(path)
 
         public val uiState: StateFlow<CatalogListUiState> =
             combine(

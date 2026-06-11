@@ -1,6 +1,7 @@
 package com.cashierapp.photocheckout.data.recognizer
 
 import android.util.Base64
+import android.util.Log
 import com.cashierapp.photocheckout.data.config.RecognizerConfig
 import com.cashierapp.photocheckout.data.recognizer.dto.ChatCompletionRequest
 import com.cashierapp.photocheckout.data.recognizer.dto.ChatMessage
@@ -14,6 +15,8 @@ import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
 import com.cashierapp.photocheckout.domain.recognizer.Recognizer
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
+
+private const val TAG = "OpenRouterRecognizer"
 
 private const val PROMPT =
     "You are a cashier vision assistant. Identify which catalog items appear in the photo and how many of " +
@@ -42,6 +45,7 @@ public class OpenRouterRecognizer
             runCatching {
                 val apiKey = config.apiKey
                 require(!apiKey.isNullOrBlank()) { "OpenRouter API key is not set." }
+                Log.d(TAG, "Requesting recognition: model=${config.modelId}, catalog=${catalog.size} items")
 
                 val request =
                     ChatCompletionRequest(
@@ -67,6 +71,7 @@ public class OpenRouterRecognizer
                         ?.message
                         ?.content
                         ?: error("No content in recognizer response.")
+                Log.d(TAG, "Raw response content: $content")
                 val payload = json.decodeFromString(RecognitionPayload.serializer(), content)
                 payload.items.map { dto ->
                     RecognizedItem(
@@ -75,6 +80,10 @@ public class OpenRouterRecognizer
                         confidence = dto.confidence,
                     )
                 }
+            }.onSuccess { items ->
+                Log.d(TAG, "Recognition succeeded: ${items.size} item(s) -> $items")
+            }.onFailure { error ->
+                Log.e(TAG, "Recognition failed: ${error.message}", error)
             }
 
         /** Candidate-narrowing seam (MVP: full active catalog as compact {sku, name} text). */

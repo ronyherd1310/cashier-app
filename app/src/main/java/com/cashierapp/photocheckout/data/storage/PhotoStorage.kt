@@ -26,6 +26,8 @@ public class PhotoStorage(
 
     public fun read(path: String): ByteArray = resolve(path).readBytes()
 
+    public fun absolutePath(path: String): String = resolve(path).absolutePath
+
     public fun delete(path: String): Boolean = resolve(path).delete()
 
     public fun exists(path: String): Boolean = resolve(path).exists()

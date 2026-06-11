@@ -33,6 +33,15 @@ android {
         }
     }
 
+    buildTypes {
+        release {
+            // Personal-testing release: signed with the debug key so the APK installs
+            // on a real device without a custom keystore. NOT suitable for Play Store.
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
     buildFeatures {
         compose = true
     }

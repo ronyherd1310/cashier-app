@@ -21,5 +21,6 @@ public fun CatalogListRoute(
         onStatusFilterChange = viewModel::onStatusFilterChange,
         onSortOrderChange = viewModel::onSortOrderChange,
         onProductActiveChange = viewModel::setActive,
+        resolvePhotoPath = viewModel::resolvePhotoPath,
     )
 }

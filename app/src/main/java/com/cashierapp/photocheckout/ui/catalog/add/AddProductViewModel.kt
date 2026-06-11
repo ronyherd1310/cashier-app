@@ -3,6 +3,8 @@ package com.cashierapp.photocheckout.ui.catalog.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cashierapp.photocheckout.data.storage.PhotoStorage
+import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
+import com.cashierapp.photocheckout.domain.catalog.SkuGenerator
 import com.cashierapp.photocheckout.domain.money.IdrFormat
 import com.cashierapp.photocheckout.domain.usecase.EnrollProduct
 import com.cashierapp.photocheckout.domain.usecase.EnrollProductInput
@@ -19,9 +21,26 @@ public class AddProductViewModel
     constructor(
         private val enrollProduct: EnrollProduct,
         private val photoStorage: PhotoStorage,
+        private val catalogRepository: CatalogRepository,
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(AddProductUiState())
         public val uiState: StateFlow<AddProductUiState> = mutableState
+
+        init {
+            refreshPreviewSku()
+        }
+
+        public fun reset() {
+            mutableState.value = AddProductUiState()
+            refreshPreviewSku()
+        }
+
+        private fun refreshPreviewSku() {
+            viewModelScope.launch {
+                val previewSku = SkuGenerator.generate(catalogRepository.nextSkuSequence())
+                mutableState.update { it.copy(previewSku = previewSku) }
+            }
+        }
 
         public fun onNameChange(value: String) {
             mutableState.update { it.copy(name = value) }
@@ -31,9 +50,11 @@ public class AddProductViewModel
             mutableState.update { it.copy(price = value) }
         }
 
-        public fun addPlaceholderPhoto() {
-            val path = photoStorage.save(PLACEHOLDER_PHOTO_BYTES, "reference.jpg")
-            mutableState.update { it.copy(photoPath = path) }
+        public fun onPhotoCaptured(bytes: ByteArray) {
+            val path = photoStorage.save(bytes, "reference.jpg")
+            mutableState.update {
+                it.copy(photoPath = path, photoAbsolutePath = photoStorage.absolutePath(path))
+            }
         }
 
         public fun nextStep() {
@@ -59,10 +80,6 @@ public class AddProductViewModel
                 onSaved()
             }
         }
-
-        private companion object {
-            val PLACEHOLDER_PHOTO_BYTES = byteArrayOf(1, 2, 3)
-        }
     }
 
 public data class AddProductUiState(
@@ -70,6 +87,8 @@ public data class AddProductUiState(
     val name: String = "",
     val price: String = "",
     val photoPath: String? = null,
+    val photoAbsolutePath: String? = null,
+    val previewSku: String = "",
 ) {
     public val canContinueFromBasic: Boolean = name.isNotBlank() && photoPath != null
     public val canContinueFromPrice: Boolean = runCatching { IdrFormat.parse(price) > 0L }.getOrDefault(false)

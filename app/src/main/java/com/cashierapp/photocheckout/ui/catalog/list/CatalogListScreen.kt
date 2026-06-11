@@ -1,12 +1,14 @@
 package com.cashierapp.photocheckout.ui.catalog.list
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,15 +18,29 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,9 +49,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.cashierapp.photocheckout.domain.model.CatalogItem
@@ -54,9 +72,11 @@ public fun CatalogListScreen(
     onStatusFilterChange: (CatalogStatusFilter) -> Unit = {},
     onSortOrderChange: (CatalogSortOrder) -> Unit = {},
     onProductActiveChange: (Long, Boolean) -> Unit = { _, _ -> },
+    resolvePhotoPath: (String) -> String = { it },
     modifier: Modifier = Modifier,
 ) {
     var productPendingStatusChange by remember { mutableStateOf<CatalogItem?>(null) }
+    var showFilterSheet by remember { mutableStateOf(false) }
 
     Column(
         modifier =
@@ -64,7 +84,10 @@ public fun CatalogListScreen(
                 .fillMaxSize()
                 .padding(AppDimens.screenPadding),
     ) {
-        CatalogHeader(activeCount = state.activeCount)
+        CatalogHeader(
+            activeCount = state.activeCount,
+            onFilterClick = { showFilterSheet = true },
+        )
         Spacer(modifier = Modifier.height(AppDimens.spaceLg))
         Button(
             modifier =
@@ -78,21 +101,9 @@ public fun CatalogListScreen(
             Text(text = "+  Add Product")
         }
         Spacer(modifier = Modifier.height(AppDimens.spaceMd))
-        OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = state.query,
-            onValueChange = onQueryChange,
-            enabled = true,
-            placeholder = { Text("Search products...") },
-            shape = RoundedCornerShape(AppDimens.controlRadius),
-        )
-        Spacer(modifier = Modifier.height(AppDimens.spaceMd))
-
-        CatalogFilterRow(
-            statusFilter = state.statusFilter,
-            sortOrder = state.sortOrder,
-            onStatusFilterChange = onStatusFilterChange,
-            onSortOrderChange = onSortOrderChange,
+        CatalogSearchField(
+            query = state.query,
+            onQueryChange = onQueryChange,
         )
         Spacer(modifier = Modifier.height(AppDimens.spaceMd))
 
@@ -112,10 +123,24 @@ public fun CatalogListScreen(
                         onRequestStatusChange = {
                             productPendingStatusChange = product
                         },
+                        resolvePhotoPath = resolvePhotoPath,
                     )
                 }
             }
         }
+    }
+
+    if (showFilterSheet) {
+        CatalogFilterSheet(
+            statusFilter = state.statusFilter,
+            sortOrder = state.sortOrder,
+            onApply = { status, sort ->
+                onStatusFilterChange(status)
+                onSortOrderChange(sort)
+                showFilterSheet = false
+            },
+            onDismiss = { showFilterSheet = false },
+        )
     }
 
     productPendingStatusChange?.let { product ->
@@ -154,85 +179,179 @@ public fun CatalogListScreen(
 }
 
 @Composable
-private fun CatalogFilterRow(
+private fun CatalogSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+) {
+    OutlinedTextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = query,
+        onValueChange = onQueryChange,
+        singleLine = true,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        placeholder = {
+            Text(
+                text = "Search products...",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        shape = RoundedCornerShape(AppDimens.controlRadius),
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = TealPrimary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            ),
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CatalogFilterSheet(
     statusFilter: CatalogStatusFilter,
     sortOrder: CatalogSortOrder,
-    onStatusFilterChange: (CatalogStatusFilter) -> Unit,
-    onSortOrderChange: (CatalogSortOrder) -> Unit,
+    onApply: (CatalogStatusFilter, CatalogSortOrder) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.spaceXs)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)) {
-            TextButton(onClick = { onStatusFilterChange(CatalogStatusFilter.All) }) {
-                Text(if (statusFilter == CatalogStatusFilter.All) "All ✓" else "All")
+    var pendingStatus by remember { mutableStateOf(statusFilter) }
+    var pendingSort by remember { mutableStateOf(sortOrder) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(),
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppDimens.screenPadding)
+                    .padding(bottom = AppDimens.spaceXl),
+        ) {
+            Text(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = AppDimens.spaceMd),
+                text = "Filter & Sort",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
+
+            FilterSectionTitle("Status")
+            CatalogStatusFilter.entries.forEach { option ->
+                FilterOptionRow(
+                    label = statusLabel(option),
+                    selected = pendingStatus == option,
+                    onSelect = { pendingStatus = option },
+                )
             }
-            TextButton(onClick = { onStatusFilterChange(CatalogStatusFilter.ActiveOnly) }) {
-                Text(if (statusFilter == CatalogStatusFilter.ActiveOnly) "Active ✓" else "Active")
+
+            Spacer(modifier = Modifier.height(AppDimens.spaceMd))
+            FilterSectionTitle("Sort By")
+            CatalogSortOrder.entries.forEach { option ->
+                FilterOptionRow(
+                    label = sortLabel(option),
+                    selected = pendingSort == option,
+                    onSelect = { pendingSort = option },
+                )
             }
-            TextButton(onClick = { onStatusFilterChange(CatalogStatusFilter.InactiveOnly) }) {
-                Text(if (statusFilter == CatalogStatusFilter.InactiveOnly) "Inactive ✓" else "Inactive")
+
+            Spacer(modifier = Modifier.height(AppDimens.spaceLg))
+            Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceMd)) {
+                OutlinedButton(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                    onClick = {
+                        pendingStatus = CatalogStatusFilter.All
+                        pendingSort = CatalogSortOrder.NameAscending
+                    },
+                    shape = RoundedCornerShape(AppDimens.controlRadius),
+                ) {
+                    Text("Reset")
+                }
+                Button(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                    onClick = { onApply(pendingStatus, pendingSort) },
+                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
+                    shape = RoundedCornerShape(AppDimens.controlRadius),
+                ) {
+                    Text("Apply")
+                }
             }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)) {
-            CatalogSortButton(
-                label = "Name A-Z",
-                sortOrder = CatalogSortOrder.NameAscending,
-                selectedSortOrder = sortOrder,
-                onSortOrderChange = onSortOrderChange,
-            )
-            CatalogSortButton(
-                label = "Name Z-A",
-                sortOrder = CatalogSortOrder.NameDescending,
-                selectedSortOrder = sortOrder,
-                onSortOrderChange = onSortOrderChange,
-            )
-            CatalogSortButton(
-                label = "Price ↑",
-                sortOrder = CatalogSortOrder.PriceAscending,
-                selectedSortOrder = sortOrder,
-                onSortOrderChange = onSortOrderChange,
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)) {
-            CatalogSortButton(
-                label = "Price ↓",
-                sortOrder = CatalogSortOrder.PriceDescending,
-                selectedSortOrder = sortOrder,
-                onSortOrderChange = onSortOrderChange,
-            )
-            CatalogSortButton(
-                label = "Newest",
-                sortOrder = CatalogSortOrder.NewestFirst,
-                selectedSortOrder = sortOrder,
-                onSortOrderChange = onSortOrderChange,
-            )
-            CatalogSortButton(
-                label = "Oldest",
-                sortOrder = CatalogSortOrder.OldestFirst,
-                selectedSortOrder = sortOrder,
-                onSortOrderChange = onSortOrderChange,
-            )
         }
     }
 }
 
 @Composable
-private fun CatalogSortButton(
+private fun FilterSectionTitle(text: String) {
+    Text(
+        modifier = Modifier.padding(vertical = AppDimens.spaceSm),
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+    )
+}
+
+@Composable
+private fun FilterOptionRow(
     label: String,
-    sortOrder: CatalogSortOrder,
-    selectedSortOrder: CatalogSortOrder,
-    onSortOrderChange: (CatalogSortOrder) -> Unit,
+    selected: Boolean,
+    onSelect: () -> Unit,
 ) {
-    TextButton(onClick = { onSortOrderChange(sortOrder) }) {
-        Text(if (sortOrder == selectedSortOrder) "$label ✓" else label)
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onSelect)
+                .padding(vertical = AppDimens.spaceXs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = onSelect)
+        Spacer(modifier = Modifier.width(AppDimens.spaceSm))
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
+private fun statusLabel(status: CatalogStatusFilter): String =
+    when (status) {
+        CatalogStatusFilter.All -> "All"
+        CatalogStatusFilter.ActiveOnly -> "Active Only"
+        CatalogStatusFilter.InactiveOnly -> "Inactive Only"
+    }
+
+private fun sortLabel(sort: CatalogSortOrder): String =
+    when (sort) {
+        CatalogSortOrder.NameAscending -> "Name (A–Z)"
+        CatalogSortOrder.NameDescending -> "Name (Z–A)"
+        CatalogSortOrder.PriceAscending -> "Price (Low → High)"
+        CatalogSortOrder.PriceDescending -> "Price (High → Low)"
+        CatalogSortOrder.NewestFirst -> "Newest First"
+        CatalogSortOrder.OldestFirst -> "Oldest First"
+    }
+
 @Composable
-private fun CatalogHeader(activeCount: Int) {
+private fun CatalogHeader(
+    activeCount: Int,
+    onFilterClick: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column {
             Text(
@@ -248,9 +367,45 @@ private fun CatalogHeader(activeCount: Int) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        TextButton(onClick = {}) {
-            Text(text = "Filter")
+        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)) {
+            HeaderIconButton(
+                icon = Icons.Default.Search,
+                contentDescription = "Search products",
+                onClick = {},
+            )
+            HeaderIconButton(
+                icon = Icons.Default.FilterList,
+                contentDescription = "Filter and sort",
+                onClick = onFilterClick,
+            )
         }
+    }
+}
+
+@Composable
+private fun HeaderIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier =
+            Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(AppDimens.spaceMd))
+                .background(MaterialTheme.colorScheme.surface)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = RoundedCornerShape(AppDimens.spaceMd),
+                ).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -281,12 +436,12 @@ private fun CatalogProductCard(
     product: CatalogItem,
     onClick: () -> Unit,
     onRequestStatusChange: () -> Unit,
+    resolvePhotoPath: (String) -> String,
 ) {
     Card(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .testTag("catalog-card-menu-${product.sku}")
                 .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(AppDimens.cardRadius),
@@ -298,7 +453,7 @@ private fun CatalogProductCard(
                     .padding(AppDimens.spaceMd),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ProductThumbnail(product = product)
+            ProductThumbnail(product = product, resolvePhotoPath = resolvePhotoPath)
             Spacer(modifier = Modifier.width(AppDimens.spaceMd))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -319,31 +474,78 @@ private fun CatalogProductCard(
                     fontWeight = FontWeight.Bold,
                 )
             }
-            Column(horizontalAlignment = Alignment.End) {
-                TextButton(onClick = onRequestStatusChange) {
-                    Text(
-                        text = if (product.active) "Deactivate" else "Reactivate",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-                Text(
-                    modifier =
-                        Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(TealContainer)
-                            .padding(horizontal = AppDimens.spaceSm, vertical = AppDimens.spaceXs),
-                    text = if (product.active) "Active" else "Inactive",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TealPrimary,
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                CatalogCardMenu(
+                    product = product,
+                    onEdit = onClick,
+                    onRequestStatusChange = onRequestStatusChange,
                 )
+                StatusBadge(active = product.active)
             }
         }
     }
 }
 
 @Composable
-private fun ProductThumbnail(product: CatalogItem) {
+private fun CatalogCardMenu(
+    product: CatalogItem,
+    onEdit: () -> Unit,
+    onRequestStatusChange: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(
+            modifier = Modifier.testTag("catalog-card-menu-${product.sku}"),
+            onClick = { expanded = true },
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "More options for ${product.name}",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Edit") },
+                onClick = {
+                    expanded = false
+                    onEdit()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(if (product.active) "Deactivate" else "Reactivate") },
+                onClick = {
+                    expanded = false
+                    onRequestStatusChange()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatusBadge(active: Boolean) {
+    Text(
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(50))
+                .background(TealContainer)
+                .padding(horizontal = AppDimens.spaceSm, vertical = AppDimens.spaceXs),
+        text = if (active) "Active" else "Inactive",
+        style = MaterialTheme.typography.bodyMedium,
+        color = TealPrimary,
+    )
+}
+
+@Composable
+private fun ProductThumbnail(
+    product: CatalogItem,
+    resolvePhotoPath: (String) -> String,
+) {
     val photoPath = product.photos.firstOrNull()?.path
 
     AsyncImage(
@@ -352,7 +554,7 @@ private fun ProductThumbnail(product: CatalogItem) {
                 .size(96.dp)
                 .clip(RoundedCornerShape(AppDimens.spaceMd))
                 .background(MaterialTheme.colorScheme.primaryContainer),
-        model = photoPath?.let(::File),
+        model = photoPath?.let { File(resolvePhotoPath(it)) },
         contentDescription = "${product.name} photo",
         contentScale = ContentScale.Crop,
     )

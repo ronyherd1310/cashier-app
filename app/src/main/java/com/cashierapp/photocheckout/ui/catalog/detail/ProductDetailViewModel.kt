@@ -2,6 +2,7 @@ package com.cashierapp.photocheckout.ui.catalog.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cashierapp.photocheckout.data.storage.PhotoStorage
 import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
 import com.cashierapp.photocheckout.domain.model.CatalogItem
 import com.cashierapp.photocheckout.domain.money.IdrFormat
@@ -22,6 +23,7 @@ public class ProductDetailViewModel
         private val catalogRepository: CatalogRepository,
         private val updateProduct: UpdateProduct,
         private val setProductActive: SetProductActive,
+        private val photoStorage: PhotoStorage,
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(ProductDetailUiState())
         public val uiState: StateFlow<ProductDetailUiState> = mutableState
@@ -32,6 +34,8 @@ public class ProductDetailViewModel
             this.productId = productId
             reload()
         }
+
+        public fun resolvePhotoPath(path: String): String = photoStorage.absolutePath(path)
 
         public fun onNameChange(value: String) {
             mutableState.update { it.copy(nameInput = value) }
@@ -57,16 +61,17 @@ public class ProductDetailViewModel
             }
         }
 
-        public fun addPlaceholderPhoto() {
+        public fun onPhotoCaptured(bytes: ByteArray) {
             val product = mutableState.value.product ?: return
             if (product.photos.size >= MAX_PHOTOS) return
+            val path = photoStorage.save(bytes, "detail.jpg")
             viewModelScope.launch {
                 updateProduct(
                     UpdateProductInput(
                         productId = product.id,
                         name = mutableState.value.nameInput,
                         priceMinor = IdrFormat.parse(mutableState.value.priceInput),
-                        photoPaths = product.photos.map { it.path } + "detail-${product.photos.size + 1}.jpg",
+                        photoPaths = product.photos.map { it.path } + path,
                     ),
                 )
                 reload()

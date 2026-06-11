@@ -44,9 +44,11 @@ public class ProductDetailScreenTest {
         }
 
         composeRule.onNodeWithText("Product Detail").assertExists()
-        composeRule.onNodeWithText("SKU • SKU-0001").assertExists()
-        composeRule.onNodeWithText("Current: IDR 25.000").assertExists()
-        composeRule.onNodeWithText("Photos: 1 of 3 photos").assertExists()
+        composeRule.onNodeWithText("SKU  •  SKU-0001").assertExists()
+        composeRule.onNodeWithText("Price (IDR)").assertExists()
+        composeRule.onNodeWithText("25.000").assertExists()
+        composeRule.onNodeWithText("1 of 3 photos").assertExists()
+        composeRule.onNodeWithText("Add Photo").assertExists()
         composeRule.onNodeWithText("Edit Product").assertExists()
         composeRule.onNodeWithText("Deactivate").assertExists()
     }
