@@ -159,8 +159,13 @@ app/src/test/                → JVM unit tests (domain, pricing, fakes)
 app/src/androidTest/         → Room DAO, Compose UI, and end-to-end journey tests
   e2e/                       → Cross-module E2E (Hilt + FakeRecognizer + seeded DB)
   benchmark/                 → On-demand accuracy/cost harness (real Recognizer, not CI)
-docs/ideas/photo-checkout.md → Origin idea one-pager
-SPEC.md                      → This document
+docs/                        → Project documentation root
+  ideas/                     → Origin ideas and discovery notes
+  spec/                      → Product and technical specifications
+  plans/                     → Implementation plans and architecture notes
+  todos/                     → Execution checklists derived from plans
+  screenshots/               → UI references, mockups, and screen captures
+docs/spec/SPEC.md            → This document
 ```
 
 ## Code Style

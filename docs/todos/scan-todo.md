@@ -1,6 +1,6 @@
 # Scan Module — Task List
 
-> Scope: Scan module (SCAN-1…10) + the recognition/pricing seam and provider config Scan is first to need. Full detail in `tasks/scan-plan.md`.
+> Scope: Scan module (SCAN-1…10) + the recognition/pricing seam and provider config Scan is first to need. Full detail in `docs/plans/scan-plan.md`.
 > Builds on the completed Catalogue module. Order is top-to-bottom (dependency-ordered). Don't cross a checkpoint until it's green + reviewed.
 
 ## Phase 0 — Tooling

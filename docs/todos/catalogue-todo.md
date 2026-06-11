@@ -1,6 +1,6 @@
 # Catalogue Module — Task List
 
-> Scope: Catalogue module (CAT-1…7) + shared bootstrap. Full detail in `tasks/catalogue-plan.md`.
+> Scope: Catalogue module (CAT-1…7) + shared bootstrap. Full detail in `docs/plans/catalogue-plan.md`.
 > Order is top-to-bottom (dependency-ordered). Don't cross a checkpoint until it's green + reviewed.
 
 ## Phase 0 — Project & App Foundation

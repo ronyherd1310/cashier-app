@@ -1,7 +1,7 @@
 # Implementation Plan: Catalogue Module (Photo Checkout)
 
 > Scope: **Catalogue module only** (CAT-1…7) plus the shared project/app bootstrap it's the first to need.
-> Source: `SPEC.md` · UI designs: `docs/screen-capture/01..06`
+> Source: `docs/spec/SPEC.md` · UI designs: `docs/screenshots/01..06`
 > Status: Implemented through Task 12. Full local verification passed on 2026-06-06 with Java 21.
 > Created: 2026-06-06
 
@@ -11,7 +11,7 @@ Build the Catalogue module: the on-device product catalogue (name, IDR price, re
 
 ## Design findings folded into this plan (designs vs. SPEC)
 
-These come from `docs/screen-capture/` and refine the spec. Items marked **(decision)** are adopted here; **(open)** need your confirmation (see Open Questions).
+These come from `docs/screenshots/` and refine the spec. Items marked **(decision)** are adopted here; **(open)** need your confirmation (see Open Questions).
 
 - **Add Product = 3-step wizard** — Basic Info (photo, name, SKU preview) → Pricing → Review/Save (screens 02–04). **(decision: follow design)**
 - **Product Detail is its own screen** (06) with photo carousel `1/3`, inline "Edit" price, "Edit Product", red "Deactivate". **(decision)**
@@ -263,7 +263,7 @@ Build order follows this bottom-up. Risk-forward note: camera (T6) is the riskie
 
 ---
 
-## UI Styling & Design System (from `docs/screen-capture/`)
+## UI Styling & Design System (from `docs/screenshots/`)
 
 This section translates the six Catalogue mockups into implementation-ready tokens for a Compose **Material3** theme. **All hex/dp values are visual approximations** — if a Figma/source file exists, confirm exact values against it. Implement these as theme files in **T1** (`Color.kt`, `Type.kt`, `Shape.kt`, `Dimens.kt`) so every UI slice (T5–T10) consumes tokens, not literals.
 

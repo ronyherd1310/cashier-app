@@ -1,10 +1,10 @@
 # Implementation Plan: Scan Module (Photo Checkout)
 
 > Scope: **Scan module only** (SCAN-1…10) plus the recognition/pricing seam and provider config the module is the first to need (X-1, X-2, X-3 as they touch Scan).
-> Source: `SPEC.md` · Builds on the completed Catalogue module (`tasks/catalogue-plan.md`).
+> Source: `docs/spec/SPEC.md` · Builds on the completed Catalogue module (`docs/plans/catalogue-plan.md`).
 > Status: Draft for review.
 > Created: 2026-06-07
-> Updated: 2026-06-07 — synchronized with Scan mockups `docs/screen-capture/07…18` (now the design source of truth).
+> Updated: 2026-06-07 — synchronized with Scan mockups `docs/screenshots/07…18` (now the design source of truth).
 >
 > **UI copy convention:** the app currently ships **English** hardcoded strings (the Catalogue module). The Scan mockups are rendered in **Indonesian** for illustration; Scan is implemented in **English** to stay consistent with Catalogue, and a full Bahasa-Indonesia localization pass (string resources) is deferred to a later, app-wide task. Throughout the wireframes below the mockup's Indonesian label is shown in parentheses for traceability, e.g. **Add item** *(“Tambah Item”)*.
 
@@ -88,8 +88,8 @@ Build order is bottom-up. Risk-forward note: the OpenRouter request/response sha
 
 For execution this plan is split by task difficulty into two standalone executor docs (this master remains the source of truth for shared context — mockups, architecture, folder structure):
 
-- **`tasks/scan-plan-easy.md`** — low-reasoning, well-specified, mechanical tasks for a **cheaper model**: **T0, T1, T11, T12**.
-- **`tasks/scan-plan-complex.md`** — correctness-critical / multi-screen / integration tasks for a **high-reasoning model**: **T2, T3, T4, T5, T6, T7, T8, T9, T10, T13, T14**.
+- **`docs/plans/scan-plan-easy.md`** — low-reasoning, well-specified, mechanical tasks for a **cheaper model**: **T0, T1, T11, T12**.
+- **`docs/plans/scan-plan-complex.md`** — correctness-critical / multi-screen / integration tasks for a **high-reasoning model**: **T2, T3, T4, T5, T6, T7, T8, T9, T10, T13, T14**.
 
 The two tracks **interleave by the dependency order above** (neither runs fully before the other). Both split docs carry the same *Global execution order* table with the cross-track handoffs. T1's output is a verify-gate (the contract for the Complex track); the Easy track's T11/T12 wait on Complex T3/T10.
 
@@ -442,7 +442,7 @@ app/src/androidTest/java/com/cashierapp/photocheckout/  instrumented tests
 
 ## Screens & UI Design
 
-**Scan mockups now exist and are the design source of truth.** `docs/screen-capture/` now contains **twelve Scan captures, `07`–`18`**, alongside the six Catalogue ones (01–06). The wireframes in this section have been **reconciled against those mockups**; where the mockup and the original wireframe disagreed, the mockup wins. The mockups are rendered in Indonesian — Scan is built in **English** (see the UI-copy convention at the top of this plan), so each screen lists its mockup's Indonesian label for traceability. They still reuse the existing design system verbatim (no new visual language):
+**Scan mockups now exist and are the design source of truth.** `docs/screenshots/` now contains **twelve Scan captures, `07`–`18`**, alongside the six Catalogue ones (01–06). The wireframes in this section have been **reconciled against those mockups**; where the mockup and the original wireframe disagreed, the mockup wins. The mockups are rendered in Indonesian — Scan is built in **English** (see the UI-copy convention at the top of this plan), so each screen lists its mockup's Indonesian label for traceability. They still reuse the existing design system verbatim (no new visual language):
 
 **Mockup index (designer's screen numbering → this plan):**
 

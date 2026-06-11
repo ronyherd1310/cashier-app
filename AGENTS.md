@@ -6,6 +6,33 @@ This is a single-module native Android project. The app module lives in `app/`, 
 
 Resources are in `app/src/main/res`. JVM tests are in `app/src/test/java`; emulator tests are in `app/src/androidTest/java`. Room schemas are checked in under `app/schemas`.
 
+## Current Folder Structure
+
+- `app/` — Android application module.
+- `app/src/main/java/com/cashierapp/photocheckout/` — production Kotlin source.
+  - `data/` — Android and IO implementations, including Room database code, file storage, image processing, recognizer adapters, config, and telemetry.
+  - `domain/` — Android-free business logic, models, money formatting, pricing, recognizer contracts, telemetry contracts, and use cases.
+  - `di/` — Hilt modules and dependency wiring.
+  - `ui/` — Compose UI organized by feature and shared components.
+    - `catalog/` — catalogue list, add-product wizard, detail, edit, deactivate/reactivate flows.
+    - `scan/` — scan capture, draft review, edit-line, add-item, and discarded-draft flows.
+    - `common/` — reusable UI such as camera, dialogs, and processing overlays.
+    - `settings/` — app/provider configuration UI.
+    - `shell/` — app shell, destination state, and bottom navigation.
+    - `theme/` — Compose Material theme tokens.
+- `app/src/main/res/` — Android resources.
+- `app/src/test/java/` — JVM unit tests.
+- `app/src/androidTest/java/` — instrumentation, Room, and Compose UI tests.
+- `app/schemas/` — exported Room schemas.
+- `docs/` — single documentation root.
+  - `spec/` — product and technical specifications, currently `docs/spec/SPEC.md`.
+  - `plans/` — implementation plans and architecture notes.
+  - `todos/` — execution checklists derived from plans.
+  - `ideas/` — origin ideas and discovery notes.
+  - `screenshots/` — UI references, mockups, and screen captures.
+- `gradle/` — Gradle wrapper and shared build support.
+- Root Gradle files (`settings.gradle.kts`, `build.gradle.kts`, `gradle.properties`) — project build configuration.
+
 ## Build, Test, and Development Commands
 
 - `./gradlew app:assembleDebug` builds the debug APK.
