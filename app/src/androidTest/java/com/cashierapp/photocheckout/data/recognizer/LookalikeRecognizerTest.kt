@@ -139,7 +139,11 @@ public class LookalikeRecognizerTest {
     private fun kotlinx.serialization.json.JsonElement.isImageUrl(): Boolean = imageUrl()?.startsWith("data:image/jpeg;base64,") == true
 
     private fun kotlinx.serialization.json.JsonElement.imageUrl(): String? =
-        jsonObject["image_url"]?.jsonObject?.get("url")?.jsonPrimitive?.content
+        jsonObject["image_url"]
+            ?.jsonObject
+            ?.get("url")
+            ?.jsonPrimitive
+            ?.content
 
     private fun jpegBytes(color: Int): ByteArray {
         val bitmap = Bitmap.createBitmap(320, 180, Bitmap.Config.ARGB_8888)

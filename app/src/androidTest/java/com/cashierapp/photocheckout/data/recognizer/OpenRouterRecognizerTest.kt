@@ -10,12 +10,11 @@ import com.cashierapp.photocheckout.domain.model.CapturedImage
 import com.cashierapp.photocheckout.domain.model.CatalogItem
 import com.cashierapp.photocheckout.domain.model.ProductPhoto
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -231,14 +230,23 @@ public class OpenRouterRecognizerTest {
             .jsonArray
     }
 
-    private fun JsonArray.indexOfText(text: String): Int =
-        indexOfFirst { part -> part.jsonObject["text"]?.jsonPrimitive?.content == text }
+    private fun JsonArray.indexOfText(text: String): Int = indexOfFirst { part -> part.jsonObject["text"]?.jsonPrimitive?.content == text }
 
     private fun JsonArray.indexOfImageUrl(url: String): Int =
-        indexOfFirst { part -> part.jsonObject["image_url"]?.jsonObject?.get("url")?.jsonPrimitive?.content == url }
+        indexOfFirst { part ->
+            part.jsonObject["image_url"]
+                ?.jsonObject
+                ?.get("url")
+                ?.jsonPrimitive
+                ?.content == url
+        }
 
     private fun kotlinx.serialization.json.JsonElement.imageUrl(): String? =
-        jsonObject["image_url"]?.jsonObject?.get("url")?.jsonPrimitive?.content
+        jsonObject["image_url"]
+            ?.jsonObject
+            ?.get("url")
+            ?.jsonPrimitive
+            ?.content
 
     private fun jpegBytes(color: Int = 0xFF00AA00.toInt()): ByteArray {
         val bitmap = Bitmap.createBitmap(320, 180, Bitmap.Config.ARGB_8888)
