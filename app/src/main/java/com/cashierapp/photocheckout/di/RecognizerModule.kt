@@ -1,6 +1,7 @@
 package com.cashierapp.photocheckout.di
 
 import com.cashierapp.photocheckout.data.config.RecognizerConfig
+import com.cashierapp.photocheckout.data.image.ReferenceThumbnailStore
 import com.cashierapp.photocheckout.data.recognizer.OPENROUTER_BASE_URL
 import com.cashierapp.photocheckout.data.recognizer.OpenRouterApi
 import com.cashierapp.photocheckout.data.recognizer.OpenRouterRecognizer
@@ -56,6 +57,14 @@ public object RecognizerModule {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create(OpenRouterApi::class.java)
+
+    @Provides
+    public fun provideOpenRouterRecognizer(
+        api: OpenRouterApi,
+        config: RecognizerConfig,
+        json: Json,
+        referenceThumbnailStore: ReferenceThumbnailStore,
+    ): OpenRouterRecognizer = OpenRouterRecognizer(api, config, json, referenceThumbnailStore)
 
     @Provides
     public fun provideRecognizer(
