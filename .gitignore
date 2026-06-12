@@ -8,3 +8,4 @@ secrets.properties
 *.keystore
 /app/build/
 /captures/
+/.codex/
