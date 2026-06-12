@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,8 +22,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.cashierapp.photocheckout.ui.common.glass.GradientButton
 import com.cashierapp.photocheckout.ui.theme.AppDimens
-import com.cashierapp.photocheckout.ui.theme.TealPrimary
 
 /**
  * Draft Discarded success screen (mockup 18). Reached after confirming a discard;
@@ -66,14 +64,11 @@ public fun DraftDiscardedScreen(
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppDimens.spaceXl))
-        Button(
+        GradientButton(
             modifier = Modifier.fillMaxWidth().height(52.dp).testTag("discarded-new-scan-button"),
+            label = "New Scan",
             onClick = onNewScan,
-            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-            shape = RoundedCornerShape(AppDimens.controlRadius),
-        ) {
-            Text("New Scan")
-        }
+        )
         Spacer(modifier = Modifier.height(AppDimens.spaceSm))
         OutlinedButton(
             modifier = Modifier.fillMaxWidth().height(52.dp).testTag("discarded-home-button"),

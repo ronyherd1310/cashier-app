@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -18,6 +16,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.cashierapp.photocheckout.ui.common.glass.GradientButton
+import com.cashierapp.photocheckout.ui.common.glass.glassFieldColors
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 import com.cashierapp.photocheckout.ui.theme.TealPrimary
 
@@ -53,6 +53,7 @@ public fun SettingsScreen(
             visualTransformation = PasswordVisualTransformation(),
             placeholder = { Text("sk-or-...") },
             shape = RoundedCornerShape(AppDimens.controlRadius),
+            colors = glassFieldColors(),
         )
 
         Spacer(modifier = Modifier.height(AppDimens.spaceMd))
@@ -64,6 +65,7 @@ public fun SettingsScreen(
             onValueChange = onModelIdChange,
             singleLine = true,
             shape = RoundedCornerShape(AppDimens.controlRadius),
+            colors = glassFieldColors(),
         )
 
         Spacer(modifier = Modifier.height(AppDimens.spaceMd))
@@ -74,14 +76,11 @@ public fun SettingsScreen(
         )
 
         Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-        Button(
+        GradientButton(
             modifier = Modifier.fillMaxWidth().height(52.dp).testTag("settings-save-button"),
+            label = "Save",
             onClick = onSave,
-            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-            shape = RoundedCornerShape(AppDimens.controlRadius),
-        ) {
-            Text("Save")
-        }
+        )
         if (state.saved) {
             Spacer(modifier = Modifier.height(AppDimens.spaceSm))
             Text(

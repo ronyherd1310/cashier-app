@@ -90,6 +90,8 @@ dependencies {
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
     implementation(libs.coil.compose)
+    implementation(libs.haze)
+    implementation(libs.haze.materials)
     implementation(libs.hilt.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)

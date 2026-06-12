@@ -19,7 +19,6 @@ import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +29,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cashierapp.photocheckout.domain.model.ScanStage
+import com.cashierapp.photocheckout.ui.common.glass.GlassCard
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 import com.cashierapp.photocheckout.ui.theme.TealPrimary
 
@@ -62,9 +62,8 @@ public fun ProcessingOverlay(
                 .testTag("processing-overlay"),
         contentAlignment = Alignment.Center,
     ) {
-        Surface(
+        GlassCard(
             shape = RoundedCornerShape(AppDimens.cardRadius),
-            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier.padding(AppDimens.screenPadding),
         ) {
             Column(

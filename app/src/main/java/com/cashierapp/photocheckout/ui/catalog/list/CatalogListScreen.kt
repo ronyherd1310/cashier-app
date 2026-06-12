@@ -1,11 +1,11 @@
 package com.cashierapp.photocheckout.ui.catalog.list
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,10 +23,6 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +32,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +52,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.cashierapp.photocheckout.domain.model.CatalogItem
 import com.cashierapp.photocheckout.domain.money.IdrFormat
+import com.cashierapp.photocheckout.ui.common.glass.GlassCard
+import com.cashierapp.photocheckout.ui.common.glass.GlassIconButton
+import com.cashierapp.photocheckout.ui.common.glass.GradientButton
+import com.cashierapp.photocheckout.ui.common.glass.glassFieldColors
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 import com.cashierapp.photocheckout.ui.theme.TealContainer
 import com.cashierapp.photocheckout.ui.theme.TealPrimary
@@ -82,24 +80,22 @@ public fun CatalogListScreen(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(AppDimens.screenPadding),
+                .padding(horizontal = AppDimens.screenPadding)
+                .padding(top = AppDimens.screenPadding),
     ) {
         CatalogHeader(
             activeCount = state.activeCount,
             onFilterClick = { showFilterSheet = true },
         )
         Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-        Button(
+        GradientButton(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .height(56.dp),
+            label = "+  Add Product",
             onClick = onAddProductClick,
-            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-            shape = RoundedCornerShape(AppDimens.controlRadius),
-        ) {
-            Text(text = "+  Add Product")
-        }
+        )
         Spacer(modifier = Modifier.height(AppDimens.spaceMd))
         CatalogSearchField(
             query = state.query,
@@ -112,6 +108,7 @@ public fun CatalogListScreen(
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(AppDimens.spaceMd),
+                contentPadding = PaddingValues(bottom = AppDimens.bottomBarClearance),
             ) {
                 items(
                     items = state.visibleProducts,
@@ -202,13 +199,7 @@ private fun CatalogSearchField(
             )
         },
         shape = RoundedCornerShape(AppDimens.controlRadius),
-        colors =
-            OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                focusedBorderColor = TealPrimary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-            ),
+        colors = glassFieldColors(),
     )
 }
 
@@ -280,17 +271,14 @@ private fun CatalogFilterSheet(
                 ) {
                     Text("Reset")
                 }
-                Button(
+                GradientButton(
                     modifier =
                         Modifier
                             .weight(1f)
                             .height(52.dp),
+                    label = "Apply",
                     onClick = { onApply(pendingStatus, pendingSort) },
-                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-                    shape = RoundedCornerShape(AppDimens.controlRadius),
-                ) {
-                    Text("Apply")
-                }
+                )
             }
         }
     }
@@ -368,44 +356,19 @@ private fun CatalogHeader(
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)) {
-            HeaderIconButton(
+            GlassIconButton(
                 icon = Icons.Default.Search,
                 contentDescription = "Search products",
                 onClick = {},
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            HeaderIconButton(
+            GlassIconButton(
                 icon = Icons.Default.FilterList,
                 contentDescription = "Filter and sort",
                 onClick = onFilterClick,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-    }
-}
-
-@Composable
-private fun HeaderIconButton(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier =
-            Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(AppDimens.spaceMd))
-                .background(MaterialTheme.colorScheme.surface)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = RoundedCornerShape(AppDimens.spaceMd),
-                ).clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
@@ -438,12 +401,9 @@ private fun CatalogProductCard(
     onRequestStatusChange: () -> Unit,
     resolvePhotoPath: (String) -> String,
 ) {
-    Card(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         shape = RoundedCornerShape(AppDimens.cardRadius),
     ) {
         Row(

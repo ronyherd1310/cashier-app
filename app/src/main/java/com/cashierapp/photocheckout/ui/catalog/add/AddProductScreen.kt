@@ -23,22 +23,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PhotoCamera
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -48,8 +45,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.cashierapp.photocheckout.ui.common.glass.GlassCard
+import com.cashierapp.photocheckout.ui.common.glass.GlassIconButton
+import com.cashierapp.photocheckout.ui.common.glass.GradientButton
+import com.cashierapp.photocheckout.ui.common.glass.glassFieldColors
 import com.cashierapp.photocheckout.ui.theme.AppDimens
-import com.cashierapp.photocheckout.ui.theme.DividerBlue
+import com.cashierapp.photocheckout.ui.theme.GlassBorderTop
+import com.cashierapp.photocheckout.ui.theme.GlassSurfaceBottom
+import com.cashierapp.photocheckout.ui.theme.GlassSurfaceTop
 import com.cashierapp.photocheckout.ui.theme.NeutralBadge
 import com.cashierapp.photocheckout.ui.theme.TealPrimary
 import java.io.File
@@ -126,26 +129,13 @@ private fun AddProductTopBar(onBack: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .align(Alignment.CenterStart)
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(AppDimens.spaceMd))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outline,
-                        shape = RoundedCornerShape(AppDimens.spaceMd),
-                    ).clickable(onClick = onBack),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = MaterialTheme.colorScheme.onSurface,
-            )
-        }
+        GlassIconButton(
+            modifier = Modifier.align(Alignment.CenterStart),
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "Back",
+            onClick = onBack,
+            tint = MaterialTheme.colorScheme.onSurface,
+        )
         Text(
             text = "Add Product",
             style = MaterialTheme.typography.bodyLarge,
@@ -286,7 +276,7 @@ private fun BasicStep(
             )
         },
         shape = RoundedCornerShape(AppDimens.controlRadius),
-        colors = fieldColors(),
+        colors = glassFieldColors(),
     )
     Spacer(modifier = Modifier.height(AppDimens.spaceLg))
 
@@ -313,8 +303,12 @@ private fun PhotoUploadCard(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(radius))
-                .background(MaterialTheme.colorScheme.surface)
-                .dashedBorder(color = borderColor, cornerRadius = radius)
+                .background(
+                    brush =
+                        Brush.verticalGradient(
+                            colors = listOf(GlassSurfaceTop, GlassSurfaceBottom),
+                        ),
+                ).dashedBorder(color = borderColor, cornerRadius = radius)
                 .clickable(onClick = onAddPhoto)
                 .padding(vertical = AppDimens.spaceXl, horizontal = AppDimens.spaceLg),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -374,10 +368,10 @@ private fun ReadOnlyValueBox(value: String) {
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(AppDimens.controlRadius))
-                .background(MaterialTheme.colorScheme.background)
+                .background(GlassSurfaceBottom)
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = GlassBorderTop,
                     shape = RoundedCornerShape(AppDimens.controlRadius),
                 ).padding(horizontal = AppDimens.spaceMd, vertical = AppDimens.spaceMd),
     ) {
@@ -414,7 +408,7 @@ private fun PricingStep(
             )
         },
         shape = RoundedCornerShape(AppDimens.controlRadius),
-        colors = fieldColors(),
+        colors = glassFieldColors(),
     )
     Spacer(modifier = Modifier.height(AppDimens.spaceSm))
     Text(
@@ -439,42 +433,35 @@ private fun ReviewStep(
     )
     Spacer(modifier = Modifier.height(AppDimens.spaceLg))
 
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 10.dp,
-                    shape = RoundedCornerShape(AppDimens.cardRadius),
-                    ambientColor = DividerBlue.copy(alpha = 0.34f),
-                    spotColor = DividerBlue.copy(alpha = 0.34f),
-                ).clip(RoundedCornerShape(AppDimens.cardRadius))
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(AppDimens.spaceMd),
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(AppDimens.cardRadius),
     ) {
-        ReviewPhoto(
-            photoPath = state.photoAbsolutePath ?: state.photoPath,
-            onEditPhoto = onEditPhoto,
-        )
-        Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-        ReviewField(
-            label = "Product Name",
-            value = state.name,
-            valueStyle = MaterialTheme.typography.bodyLarge,
-        )
-        ReviewDivider()
-        ReviewField(
-            label = "SKU",
-            value = state.previewSku,
-            valueStyle = MaterialTheme.typography.bodyLarge,
-        )
-        ReviewDivider()
-        ReviewField(
-            label = "Price (IDR)",
-            value = state.price,
-            valueStyle = MaterialTheme.typography.bodyLarge,
-            bottomPadding = AppDimens.spaceXs,
-        )
+        Column(modifier = Modifier.padding(AppDimens.spaceMd)) {
+            ReviewPhoto(
+                photoPath = state.photoAbsolutePath ?: state.photoPath,
+                onEditPhoto = onEditPhoto,
+            )
+            Spacer(modifier = Modifier.height(AppDimens.spaceLg))
+            ReviewField(
+                label = "Product Name",
+                value = state.name,
+                valueStyle = MaterialTheme.typography.bodyLarge,
+            )
+            ReviewDivider()
+            ReviewField(
+                label = "SKU",
+                value = state.previewSku,
+                valueStyle = MaterialTheme.typography.bodyLarge,
+            )
+            ReviewDivider()
+            ReviewField(
+                label = "Price (IDR)",
+                value = state.price,
+                valueStyle = MaterialTheme.typography.bodyLarge,
+                bottomPadding = AppDimens.spaceXs,
+            )
+        }
     }
 }
 
@@ -625,25 +612,13 @@ private fun PrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Button(
+    GradientButton(
         modifier = modifier.height(ControlHeight),
+        label = label,
         enabled = enabled,
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-        shape = RoundedCornerShape(AppDimens.controlRadius),
-    ) {
-        Text(text = label)
-    }
-}
-
-@Composable
-private fun fieldColors() =
-    OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = MaterialTheme.colorScheme.surface,
-        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-        focusedBorderColor = TealPrimary,
-        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
     )
+}
 
 private fun Modifier.dashedBorder(
     color: Color,

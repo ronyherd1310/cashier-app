@@ -12,4 +12,8 @@ public object AppDimens {
     public val screenPadding: Dp = 24.dp
     public val cardRadius: Dp = 24.dp
     public val controlRadius: Dp = 18.dp
+    public val glassRadius: Dp = 28.dp
+
+    /** Bottom content inset so scrolling content can clear the floating glass nav bar. */
+    public val bottomBarClearance: Dp = 112.dp
 }

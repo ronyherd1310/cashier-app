@@ -1,5 +1,6 @@
 package com.cashierapp.photocheckout.ui.scan.capture
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.cashierapp.photocheckout.ui.common.glass.GlassCard
+import com.cashierapp.photocheckout.ui.common.glass.GradientButton
 import com.cashierapp.photocheckout.ui.common.overlay.ProcessingOverlay
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 
@@ -78,7 +80,8 @@ public fun ScanCaptureScreen(
 private fun FramingHintPill(modifier: Modifier = Modifier) {
     Surface(
         shape = RoundedCornerShape(AppDimens.controlRadius),
-        color = Color.Black.copy(alpha = 0.5f),
+        color = Color.Black.copy(alpha = 0.45f),
+        border = BorderStroke(width = 1.dp, color = Color.White.copy(alpha = 0.3f)),
         modifier = modifier.testTag("scan-framing-hint"),
     ) {
         Text(
@@ -101,9 +104,8 @@ private fun ErrorBanner(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    GlassCard(
         shape = RoundedCornerShape(AppDimens.cardRadius),
-        color = MaterialTheme.colorScheme.surface,
         modifier = modifier.testTag("scan-error-banner"),
     ) {
         Column(
@@ -120,9 +122,11 @@ private fun ErrorBanner(
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(AppDimens.spaceMd))
-            Button(onClick = onRetry, modifier = Modifier.testTag("scan-error-retry-button")) {
-                Text(text = "Try again")
-            }
+            GradientButton(
+                label = "Try again",
+                onClick = onRetry,
+                modifier = Modifier.testTag("scan-error-retry-button"),
+            )
         }
     }
 }

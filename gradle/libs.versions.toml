@@ -5,6 +5,7 @@ coil = "2.7.0"
 composeBom = "2026.05.00"
 detekt = "1.23.8"
 espresso = "3.7.0"
+haze = "1.7.2"
 hilt = "2.57.2"
 junit = "4.13.2"
 junitExt = "1.2.1"
@@ -50,6 +51,8 @@ camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cam
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camera" }
 camera-view = { module = "androidx.camera:camera-view", version.ref = "camera" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
+haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 junit = { module = "junit:junit", version.ref = "junit" }

@@ -31,7 +31,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,8 +48,12 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cashierapp.photocheckout.domain.model.ProductPhoto
 import com.cashierapp.photocheckout.domain.money.IdrFormat
+import com.cashierapp.photocheckout.ui.common.glass.GlassCard
+import com.cashierapp.photocheckout.ui.common.glass.glassFieldColors
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 import com.cashierapp.photocheckout.ui.theme.DangerRed
+import com.cashierapp.photocheckout.ui.theme.GlassBorderTop
+import com.cashierapp.photocheckout.ui.theme.GlassSurfaceBottom
 import com.cashierapp.photocheckout.ui.theme.TealContainer
 import com.cashierapp.photocheckout.ui.theme.TealPrimary
 import java.io.File
@@ -205,7 +208,8 @@ private fun DetailTopBar(onBack: () -> Unit) {
                     .align(Alignment.CenterStart)
                     .size(52.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(GlassSurfaceBottom)
+                    .border(1.dp, GlassBorderTop, RoundedCornerShape(18.dp)),
             onClick = onBack,
         ) {
             Icon(
@@ -226,7 +230,8 @@ private fun DetailTopBar(onBack: () -> Unit) {
                     .align(Alignment.CenterEnd)
                     .size(52.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(GlassSurfaceBottom)
+                    .border(1.dp, GlassBorderTop, RoundedCornerShape(18.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -330,31 +335,34 @@ private fun PriceCard(
     price: String,
     onEdit: () -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(AppDimens.cardRadius))
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(AppDimens.spaceMd),
-        verticalAlignment = Alignment.CenterVertically,
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(AppDimens.cardRadius),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Price (IDR)",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 16.sp,
-            )
-            Spacer(modifier = Modifier.height(AppDimens.spaceSm))
-            Text(
-                text = price,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-        OutlinedButton(onClick = onEdit, shape = RoundedCornerShape(14.dp)) {
-            Text("Edit", fontWeight = FontWeight.Bold)
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(AppDimens.spaceMd),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Price (IDR)",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 16.sp,
+                )
+                Spacer(modifier = Modifier.height(AppDimens.spaceSm))
+                Text(
+                    text = price,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            OutlinedButton(onClick = onEdit, shape = RoundedCornerShape(14.dp)) {
+                Text("Edit", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -611,10 +619,4 @@ private fun EditProductDialog(
 }
 
 @Composable
-private fun editFieldColors() =
-    OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = MaterialTheme.colorScheme.surface,
-        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-        focusedBorderColor = TealPrimary,
-        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-    )
+private fun editFieldColors() = glassFieldColors()

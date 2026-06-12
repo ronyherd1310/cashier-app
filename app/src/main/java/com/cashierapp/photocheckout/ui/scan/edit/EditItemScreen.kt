@@ -19,7 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -44,9 +44,12 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.cashierapp.photocheckout.domain.model.DraftLine
 import com.cashierapp.photocheckout.domain.money.IdrFormat
+import com.cashierapp.photocheckout.ui.common.glass.GradientButton
+import com.cashierapp.photocheckout.ui.common.glass.glassFieldColors
 import com.cashierapp.photocheckout.ui.theme.AppDimens
 import com.cashierapp.photocheckout.ui.theme.DangerRed
 import com.cashierapp.photocheckout.ui.theme.TealPrimary
+import com.cashierapp.photocheckout.ui.theme.TealPrimaryLight
 import java.io.File
 
 /**
@@ -133,6 +136,7 @@ public fun EditItemScreen(
             onValueChange = { note = it },
             placeholder = { Text("Add a note...") },
             shape = RoundedCornerShape(AppDimens.controlRadius),
+            colors = glassFieldColors(),
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -147,14 +151,11 @@ public fun EditItemScreen(
                 Spacer(modifier = Modifier.width(AppDimens.spaceXs))
                 Text("Remove Item")
             }
-            Button(
+            GradientButton(
                 modifier = Modifier.weight(1f).height(52.dp).testTag("edit-save-button"),
+                label = "Save",
                 onClick = { onSave(quantity, note) },
-                colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-                shape = RoundedCornerShape(AppDimens.controlRadius),
-            ) {
-                Text("Save")
-            }
+            )
         }
         Spacer(modifier = Modifier.height(AppDimens.spaceLg))
     }
@@ -197,8 +198,12 @@ private fun StepperButton(
             Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(AppDimens.spaceSm))
-                .background(TealPrimary)
-                .clickable(onClick = onClick)
+                .background(
+                    brush =
+                        Brush.horizontalGradient(
+                            colors = listOf(TealPrimary, TealPrimaryLight),
+                        ),
+                ).clickable(onClick = onClick)
                 .testTag(tag),
         contentAlignment = Alignment.Center,
     ) {

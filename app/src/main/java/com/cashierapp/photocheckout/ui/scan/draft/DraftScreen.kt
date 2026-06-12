@@ -14,8 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -37,8 +35,9 @@ import androidx.compose.ui.unit.dp
 import com.cashierapp.photocheckout.domain.model.UnidentifiedItem
 import com.cashierapp.photocheckout.domain.money.IdrFormat
 import com.cashierapp.photocheckout.ui.common.dialogs.ConfirmDialog
+import com.cashierapp.photocheckout.ui.common.glass.GlassCard
+import com.cashierapp.photocheckout.ui.common.glass.GradientButton
 import com.cashierapp.photocheckout.ui.theme.AppDimens
-import com.cashierapp.photocheckout.ui.theme.TealPrimary
 
 /**
  * Draft Review screen (S2, mockups 09/13/14): priced lines with numeric confidence
@@ -86,9 +85,13 @@ public fun DraftScreen(
                 }
             }
 
-            TotalsSection(subtotalMinor = state.subtotalMinor, totalMinor = state.totalMinor)
-            Spacer(modifier = Modifier.height(AppDimens.spaceMd))
-            DraftActions(onAddItem = onAddItem, onConfirm = onConfirm)
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(AppDimens.spaceMd)) {
+                    TotalsSection(subtotalMinor = state.subtotalMinor, totalMinor = state.totalMinor)
+                    Spacer(modifier = Modifier.height(AppDimens.spaceMd))
+                    DraftActions(onAddItem = onAddItem, onConfirm = onConfirm)
+                }
+            }
             Spacer(modifier = Modifier.height(AppDimens.spaceLg))
         }
     }
@@ -180,14 +183,11 @@ private fun DraftEmptyState(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-        Button(
+        GradientButton(
             modifier = Modifier.height(52.dp).testTag("draft-scan-again-button"),
+            label = "Scan again",
             onClick = onScanAgain,
-            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-            shape = RoundedCornerShape(AppDimens.controlRadius),
-        ) {
-            Text("Scan again")
-        }
+        )
     }
 }
 
@@ -275,17 +275,14 @@ private fun DraftActions(
         ) {
             Text("+ Add Item")
         }
-        Button(
+        GradientButton(
             modifier =
                 Modifier
                     .weight(1f)
                     .height(52.dp)
                     .testTag("draft-confirm-button"),
+            label = "Confirm",
             onClick = onConfirm,
-            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-            shape = RoundedCornerShape(AppDimens.controlRadius),
-        ) {
-            Text("Confirm")
-        }
+        )
     }
 }
