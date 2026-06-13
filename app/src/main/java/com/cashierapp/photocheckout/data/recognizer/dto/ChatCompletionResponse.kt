@@ -29,4 +29,5 @@ public data class RecognizedItemDto(
     val sku: String,
     val quantity: Int = 1,
     val confidence: Float = 0f,
+    val box: List<Float>? = null,
 )

@@ -13,7 +13,7 @@ An Android app for a cashier at a counter. The cashier photographs a group of **
 **Primary user:** A cashier ringing up a customer's order at a fixed counter, indoors, on a single Android phone.
 
 **Two rules that define the product (non-negotiable):**
-1. **The recognizer identifies; the database prices.** The vision model returns only `{sku, quantity, confidence}`. The app applies prices from the local catalog and computes the total. The model never sees or sets prices.
+1. **The recognizer identifies; the database prices.** The vision model returns only item identity, quantity/instance, confidence, and optional evidence such as a bounding box. The app applies prices from the local catalog and computes the total. The model never sees or sets prices.
 2. **Draft, don't decide.** The app proposes a draft receipt; the cashier confirms, edits a quantity, removes a wrong item, or adds a missed one before committing. Sales never auto-commit.
 
 **Architecture seam:** Recognition sits behind a single `Recognizer` interface (image + catalog in → `[{sku, qty, confidence, bbox?}]` out). Phase 1 implements it with a cloud vision LLM; Phase 2 adds an on-device implementation to drive per-scan cost toward zero. The vendor is a swappable config choice — never hardcoded in domain or UI.
@@ -34,7 +34,7 @@ The MVP is organized into three modules — **Catalogue**, **Scan**, **Sales** �
 - **CAT-7:** The catalog persists locally (Room), survives app restart, and remains responsive with 50–300 active items.
 
 #### Module 2 — Scan
-*Photograph the counter, recognize catalog items, and build an editable, priced draft receipt. Recognition output is identity + quantity + confidence only; pricing is deterministic.*
+*Photograph the counter, recognize catalog items, and build an editable, priced draft receipt. Recognition output is identity + quantity/instance + confidence, with optional bounding-box evidence; pricing is deterministic.*
 
 - **SCAN-1:** Tapping "Scan" opens a CameraX single-photo capture of the counter (items spread flat, non-overlapping, top-down); camera-permission denial is handled with a clear, recoverable prompt (no crash). Multi-shot capture is out of MVP.
 - **SCAN-2:** The captured image is downscaled before recognition to control cost and latency.
@@ -61,7 +61,7 @@ The MVP is organized into three modules — **Catalogue**, **Scan**, **Sales** �
 *Properties that must hold across all three modules.*
 
 - **X-1 (Money integrity):** All prices and totals are computed in the domain layer in integer minor currency units; floating-point money is never used.
-- **X-2 (Vendor-agnostic):** Swapping the recognition provider requires changing only configuration plus one `Recognizer` implementation — no changes to `domain/`, `pricing/`, or `ui/`.
+- **X-2 (Vendor-agnostic):** Swapping the recognition provider requires changing only configuration plus one `Recognizer` implementation. Provider-specific DTO and prompt changes stay in `data/recognizer/`; domain changes are limited to provider-neutral result fields and pricing rules, and `ui/` does not depend on vendor details.
 - **X-3 (Telemetry):** Per-scan cloud cost, latency, and item-level accuracy are logged for every scan during the prototype window (feeds the accuracy benchmark and go/no-go decision).
 
 ## Screens & UI
@@ -115,7 +115,7 @@ The MVP is organized into three modules — **Catalogue**, **Scan**, **Sales** �
 - **Networking (cloud Recognizer impl):** Retrofit + OkHttp + kotlinx.serialization.
 - **Image handling:** Coil for display; downscale captures before sending (cost/latency control).
 - **Recognition (Phase 1 impl):** A cloud `Recognizer` backed by the **OpenRouter API** (OpenAI-compatible chat-completions with image input + structured/JSON output). This gives two layers of vendor-agnosticism: the **model is a config string** (e.g. `google/gemini-...`, `openai/...-mini`) swappable on OpenRouter without code changes, and the whole cloud impl sits behind the `Recognizer` interface so an on-device engine can replace it later. The cheapest vision model meeting the accuracy bar is selected/confirmed via the L6 benchmark. The OpenRouter API key lives in secure storage; no model id is referenced outside `data/recognizer/`.
-- **Catalog context strategy:** Per scan, send the active catalog as a compact `{sku, name}` text list. For catalogs at or under the R1 cap (30 SKUs), also attach one labeled enrolled-reference thumbnail per SKU before the counter photo so the model can match against actual packaging. Above the cap, fall back to the text-only request; pre-narrowing remains the at-scale path.
+- **Catalog context strategy:** Per scan, send the active catalog as a compact `{sku, name}` text list. For catalogs at or under the R1 cap (30 SKUs), also attach one labeled enrolled-reference thumbnail per SKU before the counter photo so the model can match against actual packaging. The cloud prompt asks for one entry per visible physical item instance with an optional normalized box; pricing groups those instances back to one draft line per SKU. Above the cap, fall back to the text-only request; pre-narrowing remains the at-scale path.
 - **Recognition (Phase 2, out of MVP):** On-device image embeddings matching counter crops against the enrolled reference-photo gallery.
 
 ## Commands
@@ -173,7 +173,7 @@ docs/spec/SPEC.md            → This document
 - Kotlin official style; ktlint-enforced. 4-space indent. Explicit visibility on public API.
 - Domain layer is pure Kotlin with **no Android imports** — keeps it unit-testable and vendor-agnostic.
 - Money is always integer minor units (`Long`), never `Float`/`Double`/`BigDecimal` in transit.
-- `Recognizer` returns identity + quantity + confidence only — never price.
+- `Recognizer` returns identity + quantity/instance + confidence, optionally with normalized bounding-box evidence — never price.
 
 ```kotlin
 // domain/recognizer/Recognizer.kt — the one seam every engine implements.
@@ -202,15 +202,17 @@ fun priceDraft(
     catalog: Map<String, CatalogItem>,
     taxRateBps: Int = 0,             // basis points; 0 = no tax (MVP)
 ): DraftReceipt {
-    val lines = recognized.mapNotNull { r ->
-        catalog[r.sku]?.let { item ->
+    val lines = recognized.groupBy { it.sku }.mapNotNull { (sku, detections) ->
+        catalog[sku]?.let { item ->
+            val quantity = detections.sumOf { it.quantity.coerceAtLeast(1) }
+            val confidence = detections.minOf { it.confidence }
             DraftLine(
                 sku = item.sku,
                 name = item.name,
-                quantity = r.quantity,
+                quantity = quantity,
                 unitPriceMinor = item.priceMinor,        // from DB, not the model
-                lineTotalMinor = item.priceMinor * r.quantity,
-                lowConfidence = r.confidence < CONFIDENCE_THRESHOLD,
+                lineTotalMinor = item.priceMinor * quantity,
+                lowConfidence = confidence < CONFIDENCE_THRESHOLD,
             )
         }
     }

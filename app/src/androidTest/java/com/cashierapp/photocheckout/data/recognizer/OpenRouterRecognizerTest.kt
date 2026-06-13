@@ -22,6 +22,7 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -101,6 +102,64 @@ public class OpenRouterRecognizerTest {
         }
 
     @Test
+    public fun perInstanceResponsePopulatesBoundingBoxes() =
+        runBlocking {
+            val content =
+                """{\"items\":[""" +
+                    """{\"sku\":\"SKU-0001\",\"box\":[0.10,0.20,0.30,0.40],\"confidence\":0.91},""" +
+                    """{\"sku\":\"SKU-0001\",\"box\":[0.50,0.55,0.70,0.85],\"confidence\":0.82}""" +
+                    """]}"""
+            server.enqueue(
+                MockResponse().setBody(
+                    """{"choices":[{"message":{"content":"$content"}}]}""",
+                ),
+            )
+
+            val result = recognizer.recognize(image, catalog)
+
+            assertTrue(result.isSuccess)
+            val items = result.getOrThrow()
+            assertEquals(2, items.size)
+            assertEquals("SKU-0001", items[0].sku)
+            assertEquals(1, items[0].quantity)
+            assertEquals(0.10f, items[0].boundingBox!!.left)
+            assertEquals(0.20f, items[0].boundingBox!!.top)
+            assertEquals(0.30f, items[0].boundingBox!!.right)
+            assertEquals(0.40f, items[0].boundingBox!!.bottom)
+            assertEquals(0.50f, items[1].boundingBox!!.left)
+            assertEquals(0.55f, items[1].boundingBox!!.top)
+            assertEquals(0.70f, items[1].boundingBox!!.right)
+            assertEquals(0.85f, items[1].boundingBox!!.bottom)
+        }
+
+    @Test
+    public fun malformedBoundingBoxesAreDroppedWithoutFailingRecognition() =
+        runBlocking {
+            val content =
+                """{\"items\":[""" +
+                    """{\"sku\":\"SKU-0001\",\"box\":[0.10,0.20,0.30],\"confidence\":0.91},""" +
+                    """{\"sku\":\"SKU-0002\",\"box\":[0.10,0.20,1.10,0.40],\"confidence\":0.82},""" +
+                    """{\"sku\":\"SKU-0001\",\"box\":[0.70,0.20,0.30,0.40],\"confidence\":0.73}""" +
+                    """]}"""
+            server.enqueue(
+                MockResponse().setBody(
+                    """{"choices":[{"message":{"content":"$content"}}]}""",
+                ),
+            )
+
+            val result = recognizer.recognize(image, catalog)
+
+            assertTrue(result.isSuccess)
+            val items = result.getOrThrow()
+            assertEquals(3, items.size)
+            assertTrue(items.all { it.quantity == 1 })
+            assertTrue(items.all { it.confidence > 0f })
+            assertNull(items[0].boundingBox)
+            assertNull(items[1].boundingBox)
+            assertNull(items[2].boundingBox)
+        }
+
+    @Test
     public fun requestEncodesImageAndCatalog() =
         runBlocking {
             server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))
@@ -113,6 +172,21 @@ public class OpenRouterRecognizerTest {
             assertTrue(body.contains("SKU-0001"))
             assertTrue(body.contains("Coffee"))
             assertEquals("Bearer test-key", recorded.getHeader("Authorization"))
+        }
+
+    @Test
+    public fun requestPromptAsksForOneEntryPerPhysicalInstanceWithBox() =
+        runBlocking {
+            server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))
+
+            recognizer.recognize(image, catalog)
+
+            val prompt = recordedContentParts()[0].jsonObject["text"]!!.jsonPrimitive.content
+            assertTrue(prompt.contains("one entry per physical item instance"))
+            assertTrue(prompt.contains("[left, top, right, bottom]"))
+            assertTrue(prompt.contains("If you see three units of the same product, return three entries"))
+            assertTrue(prompt.contains("Use ONLY SKUs from the catalog list"))
+            assertTrue(prompt.contains("Never invent SKUs and never include prices"))
         }
 
     @Test

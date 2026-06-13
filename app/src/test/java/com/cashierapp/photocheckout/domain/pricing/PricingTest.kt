@@ -68,6 +68,111 @@ public class PricingTest {
     }
 
     @Test
+    public fun perInstanceDetectionsForSameSkuProduceOneSummedLine() {
+        val catalog = catalog(item("SKU-0001", 15_000))
+        val recognized =
+            listOf(
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.95f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.85f),
+            )
+
+        val draft = priceDraft(recognized, catalog)
+
+        val line = draft.lines.single()
+        assertEquals("SKU-0001", line.sku)
+        assertEquals(3, line.quantity)
+        assertEquals(15_000, line.unitPriceMinor)
+        assertEquals(45_000, line.lineTotalMinor)
+        assertEquals(45_000, draft.subtotalMinor)
+    }
+
+    @Test
+    public fun mixedPerInstanceDetectionsGroupIdentifiedAndUnidentifiedSkus() {
+        val catalog = catalog(item("SKU-0001", 10_000))
+        val recognized =
+            listOf(
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-UNKNOWN", quantity = 1, confidence = 0.8f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.85f),
+                RecognizedItem("SKU-UNKNOWN", quantity = 1, confidence = 0.7f),
+            )
+
+        val draft = priceDraft(recognized, catalog)
+
+        val line = draft.lines.single()
+        assertEquals("SKU-0001", line.sku)
+        assertEquals(2, line.quantity)
+        assertEquals(20_000, line.lineTotalMinor)
+
+        val unidentified = draft.unidentified.single()
+        assertEquals("SKU-UNKNOWN", unidentified.rawSku)
+        assertEquals(2, unidentified.quantity)
+        assertEquals(0.7f, unidentified.confidence)
+    }
+
+    @Test
+    public fun groupedLineUsesMinimumConfidenceForLowConfidenceFlag() {
+        val catalog = catalog(item("SKU-0001", 1_000), item("SKU-0002", 1_000))
+        val recognized =
+            listOf(
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.5f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-0002", quantity = 1, confidence = 0.6f),
+                RecognizedItem("SKU-0002", quantity = 1, confidence = 0.8f),
+            )
+
+        val draft = priceDraft(recognized, catalog)
+
+        val lowLine = draft.lines.first { it.sku == "SKU-0001" }
+        assertEquals(0.5f, lowLine.confidence)
+        assertTrue(lowLine.lowConfidence)
+
+        val thresholdLine = draft.lines.first { it.sku == "SKU-0002" }
+        assertEquals(0.6f, thresholdLine.confidence)
+        assertFalse(thresholdLine.lowConfidence)
+    }
+
+    @Test
+    public fun legacyAggregateDetectionStillProducesOneEquivalentLine() {
+        val catalog = catalog(item("SKU-0001", 15_000))
+        val recognized = listOf(RecognizedItem("SKU-0001", quantity = 2, confidence = 0.9f))
+
+        val draft = priceDraft(recognized, catalog)
+
+        val line = draft.lines.single()
+        assertEquals("SKU-0001", line.sku)
+        assertEquals(2, line.quantity)
+        assertEquals(15_000, line.unitPriceMinor)
+        assertEquals(30_000, line.lineTotalMinor)
+        assertEquals(0.9f, line.confidence)
+        assertFalse(line.lowConfidence)
+    }
+
+    @Test
+    public fun groupedLinesFollowFirstAppearanceSkuOrder() {
+        val catalog =
+            catalog(
+                item("SKU-0001", 1_000),
+                item("SKU-0002", 1_000),
+                item("SKU-0003", 1_000),
+            )
+        val recognized =
+            listOf(
+                RecognizedItem("SKU-0002", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-0002", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-0003", quantity = 1, confidence = 0.9f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.9f),
+            )
+
+        val draft = priceDraft(recognized, catalog)
+
+        assertEquals(listOf("SKU-0002", "SKU-0001", "SKU-0003"), draft.lines.map { it.sku })
+    }
+
+    @Test
     public fun confidenceBelowThresholdFlagsLowConfidence() {
         val catalog = catalog(item("SKU-0001", 1_000))
         val draft = priceDraft(listOf(RecognizedItem("SKU-0001", 1, 0.59f)), catalog)
@@ -113,8 +218,9 @@ public class PricingTest {
                 ),
                 catalog,
             )
-        assertTrue(draft.lines.all { it.quantity == 1 })
-        assertTrue(draft.lines.all { it.lineTotalMinor == 2_000L })
+        val line = draft.lines.single()
+        assertEquals(2, line.quantity)
+        assertEquals(4_000L, line.lineTotalMinor)
     }
 
     @Test

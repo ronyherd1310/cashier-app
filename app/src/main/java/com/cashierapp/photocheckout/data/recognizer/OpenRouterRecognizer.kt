@@ -12,6 +12,7 @@ import com.cashierapp.photocheckout.data.recognizer.dto.RecognitionPayload
 import com.cashierapp.photocheckout.data.recognizer.dto.ResponseFormat
 import com.cashierapp.photocheckout.domain.model.CapturedImage
 import com.cashierapp.photocheckout.domain.model.CatalogItem
+import com.cashierapp.photocheckout.domain.recognizer.BoundingBox
 import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
 import com.cashierapp.photocheckout.domain.recognizer.Recognizer
 import kotlinx.serialization.json.Json
@@ -19,9 +20,12 @@ import kotlinx.serialization.json.Json
 private const val TAG = "OpenRouterRecognizer"
 
 private const val PROMPT =
-    "You are a cashier vision assistant. Identify which catalog items appear in the photo and how many of " +
-        "each. Use ONLY the SKUs from the catalog list. Respond with JSON of the form " +
-        "{\"items\":[{\"sku\":\"SKU-0001\",\"quantity\":1,\"confidence\":0.0}]}. confidence is 0..1. " +
+    "You are a cashier vision assistant. Return one entry per physical item instance you can see, not one " +
+        "entry per product type. For each instance give its bounding box as [left, top, right, bottom] with " +
+        "each value between 0 and 1 using a top-left origin, the matching catalog SKU, and a confidence 0..1. " +
+        "If you see three units of the same product, return three entries. Use ONLY SKUs from the catalog list. " +
+        "Respond with JSON of the form " +
+        "{\"items\":[{\"sku\":\"SKU-0001\",\"box\":[0.10,0.20,0.30,0.40],\"confidence\":0.0}]}. " +
         "Reference photos, when provided, show the actual packaging of catalog products; match the counter photo " +
         "against them. Never invent SKUs and never include prices."
 
@@ -89,6 +93,7 @@ public class OpenRouterRecognizer
                         sku = dto.sku,
                         quantity = dto.quantity,
                         confidence = dto.confidence,
+                        boundingBox = dto.box?.toBoundingBoxOrNull(),
                     )
                 }
             }.onSuccess { items ->
@@ -128,5 +133,16 @@ public class OpenRouterRecognizer
         private fun dataUrl(image: CapturedImage): String {
             val base64 = Base64.encodeToString(image.bytes, Base64.NO_WRAP)
             return "data:${image.mimeType};base64,$base64"
+        }
+
+        private fun List<Float>.toBoundingBoxOrNull(): BoundingBox? {
+            if (size != 4 || any { !it.isFinite() || it !in 0f..1f }) {
+                return null
+            }
+            val (left, top, right, bottom) = this
+            if (left >= right || top >= bottom) {
+                return null
+            }
+            return BoundingBox(left = left, top = top, right = right, bottom = bottom)
         }
     }

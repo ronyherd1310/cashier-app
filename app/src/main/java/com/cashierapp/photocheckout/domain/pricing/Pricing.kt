@@ -15,8 +15,11 @@ import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
  *
  * - A recognized SKU absent from [catalog] becomes an [UnidentifiedItem] — never
  *   dropped or zero-priced (SCAN-7).
- * - Confidence below [CONFIDENCE_THRESHOLD] flags the line (SCAN-6).
- * - Quantities are clamped to >= 1.
+ * - Detections are grouped by SKU so per-instance recognition still produces
+ *   one draft line per catalog item (R2-3).
+ * - Confidence below [CONFIDENCE_THRESHOLD] flags the line; grouped confidence
+ *   uses the minimum instance confidence (SCAN-6, R2-4).
+ * - Quantities are clamped to >= 1 before summing.
  *
  * @param taxRateBps tax in basis points (1/100 of a percent); 0 = no tax (MVP).
  */
@@ -28,15 +31,16 @@ public fun priceDraft(
     val lines = mutableListOf<DraftLine>()
     val unidentified = mutableListOf<UnidentifiedItem>()
 
-    for (detection in recognized) {
-        val quantity = detection.quantity.coerceAtLeast(1)
-        val item = catalog[detection.sku]
+    for ((sku, detections) in recognized.groupBy { it.sku }) {
+        val quantity = detections.sumOf { it.quantity.coerceAtLeast(1) }
+        val confidence = detections.minOf { it.confidence }
+        val item = catalog[sku]
         if (item == null) {
             unidentified +=
                 UnidentifiedItem(
-                    rawSku = detection.sku,
+                    rawSku = sku,
                     quantity = quantity,
-                    confidence = detection.confidence,
+                    confidence = confidence,
                 )
         } else {
             lines +=
@@ -46,8 +50,8 @@ public fun priceDraft(
                     quantity = quantity,
                     unitPriceMinor = item.priceMinor,
                     lineTotalMinor = item.priceMinor * quantity,
-                    confidence = detection.confidence,
-                    lowConfidence = detection.confidence < CONFIDENCE_THRESHOLD,
+                    confidence = confidence,
+                    lowConfidence = confidence < CONFIDENCE_THRESHOLD,
                     photoPath = item.photos.firstOrNull()?.path,
                 )
         }
