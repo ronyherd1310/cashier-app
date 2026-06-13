@@ -13,8 +13,8 @@ import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
  * reaches this function as a price (X-1, SCAN-4). Money stays in integer IDR
  * minor units throughout — no floating-point.
  *
- * - A recognized SKU absent from [catalog] becomes an [UnidentifiedItem] — never
- *   dropped or zero-priced (SCAN-7).
+ * - A recognized SKU absent from [catalog], including null, becomes an
+ *   [UnidentifiedItem] — never dropped or zero-priced (SCAN-7, R3-4).
  * - Detections are grouped by SKU so per-instance recognition still produces
  *   one draft line per catalog item (R2-3).
  * - Confidence below [CONFIDENCE_THRESHOLD] flags the line; grouped confidence
@@ -34,7 +34,7 @@ public fun priceDraft(
     for ((sku, detections) in recognized.groupBy { it.sku }) {
         val quantity = detections.sumOf { it.quantity.coerceAtLeast(1) }
         val confidence = detections.minOf { it.confidence }
-        val item = catalog[sku]
+        val item = sku?.let { catalog[it] }
         if (item == null) {
             unidentified +=
                 UnidentifiedItem(

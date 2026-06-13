@@ -26,8 +26,11 @@ public data class RecognitionPayload(
 
 @Serializable
 public data class RecognizedItemDto(
-    val sku: String,
+    val sku: String? = null,
     val quantity: Int = 1,
     val confidence: Float = 0f,
     val box: List<Float>? = null,
+    val occluded: Boolean = false,
+    val possiblyMore: Boolean = false,
+    val alternates: List<String> = emptyList(),
 )

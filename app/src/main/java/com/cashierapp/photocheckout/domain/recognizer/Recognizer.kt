@@ -6,7 +6,8 @@ import com.cashierapp.photocheckout.domain.model.CatalogItem
 /**
  * The single recognition seam every engine implements. Implementations identify
  * catalog items present in an image; pricing is never this layer's job — the
- * recognizer returns identity + quantity + confidence only, never a price.
+ * recognizer returns identity + quantity + confidence + optional evidence only,
+ * never a price.
  *
  * Vendor/DTO/model-id code lives only in `data/recognizer/`.
  */
@@ -18,12 +19,15 @@ public interface Recognizer {
     ): Result<List<RecognizedItem>>
 }
 
-/** A single recognized detection: identity + quantity + confidence (+ optional box). */
+/** A single recognized detection: identity + quantity + confidence (+ optional evidence). */
 public data class RecognizedItem(
-    val sku: String,
+    val sku: String?,
     val quantity: Int,
     val confidence: Float,
     val boundingBox: BoundingBox? = null,
+    val occluded: Boolean = false,
+    val possiblyMore: Boolean = false,
+    val alternates: List<String> = emptyList(),
 )
 
 /** Normalized 0f..1f bounding box of a detection within the captured image. */
