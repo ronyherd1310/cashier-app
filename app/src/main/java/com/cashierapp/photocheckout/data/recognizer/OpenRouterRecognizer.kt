@@ -12,6 +12,7 @@ import com.cashierapp.photocheckout.data.recognizer.dto.RecognitionPayload
 import com.cashierapp.photocheckout.data.recognizer.dto.ResponseFormat
 import com.cashierapp.photocheckout.domain.model.CapturedImage
 import com.cashierapp.photocheckout.domain.model.CatalogItem
+import com.cashierapp.photocheckout.domain.recognizer.BoundingBox
 import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
 import com.cashierapp.photocheckout.domain.recognizer.Recognizer
 import kotlinx.serialization.json.Json
@@ -89,6 +90,7 @@ public class OpenRouterRecognizer
                         sku = dto.sku,
                         quantity = dto.quantity,
                         confidence = dto.confidence,
+                        boundingBox = dto.box?.toBoundingBoxOrNull(),
                     )
                 }
             }.onSuccess { items ->
@@ -128,5 +130,16 @@ public class OpenRouterRecognizer
         private fun dataUrl(image: CapturedImage): String {
             val base64 = Base64.encodeToString(image.bytes, Base64.NO_WRAP)
             return "data:${image.mimeType};base64,$base64"
+        }
+
+        private fun List<Float>.toBoundingBoxOrNull(): BoundingBox? {
+            if (size != 4 || any { !it.isFinite() || it !in 0f..1f }) {
+                return null
+            }
+            val (left, top, right, bottom) = this
+            if (left >= right || top >= bottom) {
+                return null
+            }
+            return BoundingBox(left = left, top = top, right = right, bottom = bottom)
         }
     }
