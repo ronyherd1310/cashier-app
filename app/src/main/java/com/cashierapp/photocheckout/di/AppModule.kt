@@ -31,7 +31,8 @@ public object AppModule {
                 context = context,
                 klass = CashierDatabase::class.java,
                 name = "cashier.db",
-            ).build()
+            ).addMigrations(CashierDatabase.MIGRATION_1_2)
+            .build()
 
     @Provides
     public fun provideProductDao(database: CashierDatabase): ProductDao = database.productDao()

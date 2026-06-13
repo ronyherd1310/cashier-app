@@ -61,6 +61,8 @@ public class ProductRepository(
                 active = product.active,
                 createdAt = product.createdAtEpochMillis,
                 deactivatedAt = product.deactivatedAtEpochMillis,
+                description = product.description,
+                confusionGroup = product.confusionGroup,
             ),
         )
         dao.deletePhotosForProduct(product.id)
@@ -93,4 +95,6 @@ private fun ProductWithPhotos.toDomain(): CatalogItem =
                 .map { photo -> ProductPhoto(path = photo.path, position = photo.position) },
         createdAtEpochMillis = product.createdAt,
         deactivatedAtEpochMillis = product.deactivatedAt,
+        description = product.description,
+        confusionGroup = product.confusionGroup,
     )

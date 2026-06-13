@@ -8,7 +8,7 @@
 > `docs/spec/scan-r3-edge-case-prompt.md` (R3). R4 is **independent of R2/R3** — it touches
 > `catalogContext()` text and `priceDraft`'s flag, neither of which R2/R3 change. It composes
 > with whatever recognizer shape is current (aggregate or per-instance).
-> Status: Draft — pending review. Date: 2026-06-13
+> Status: Implemented in `feat/scan-r4-visual-descriptions`. Date: 2026-06-13
 
 ## Objective
 
@@ -359,9 +359,9 @@ Settled at scope review (2026-06-13):
 
 ## Open Questions
 
-- **Group tag provenance for now.** With no R4-UI, how do descriptions/groups get set in practice
-  during the prototype — a dev seed, a temporary debug action, or only via tests? (Does not block the
-  data-layer code; affects only how the manual smoke check is staged.) → propose a small seed helper.
+- **Group tag provenance for now.** With no R4-UI, descriptions/groups are currently populated
+  through repository updates and tests only. A dev seed or temporary debug action is still needed
+  for manual smoke checks, but production enrollment remains unchanged.
 - **Description length cap.** Hard-cap at the data layer (e.g. truncate > ~120 chars) or trust the
   future editor UI to constrain it? (Default: no hard cap in R4; revisit with R4-UI.)
 - Next phase: Tasks, then Implement — to be captured in `docs/plan/scan-r4-visual-descriptions-confusion-groups.plan.md`.

@@ -36,6 +36,7 @@ private const val PROMPT =
         "that product's entries. " +
         "Look-alikes: Some catalog products differ only by flavor, color, or size. When you are torn between " +
         "specific SKUs, pick the best match and list close runner-up catalog SKUs in \"alternates\". " +
+        "Catalog descriptions and look-alike group lines call out visual differences you should use carefully. " +
         "Never invent SKUs and never include prices."
 
 /**
@@ -119,7 +120,34 @@ public class OpenRouterRecognizer
         private fun catalogContext(catalog: List<CatalogItem>): String =
             buildString {
                 append("Catalog:\n")
-                catalog.forEach { item -> append(item.sku).append(" - ").append(item.name).append('\n') }
+                catalog.forEach { item ->
+                    append(item.sku).append(" - ").append(item.name)
+                    item.description?.takeIf(String::isNotBlank)?.let { description ->
+                        append(" | ").append(description)
+                    }
+                    append('\n')
+                }
+                val lookAlikeGroups =
+                    catalog
+                        .asSequence()
+                        .filter(CatalogItem::active)
+                        .mapNotNull { item ->
+                            item.confusionGroup
+                                ?.takeIf(String::isNotBlank)
+                                ?.let { group -> group to item.sku }
+                        }.groupBy(
+                            keySelector = { (group, _) -> group },
+                            valueTransform = { (_, sku) -> sku },
+                        ).values
+                        .filter { skus -> skus.size >= 2 }
+                        .toList()
+                if (lookAlikeGroups.isNotEmpty()) {
+                    append('\n')
+                    append("Look-alike groups (distinguish carefully by label color/text):\n")
+                    lookAlikeGroups.forEach { skus ->
+                        append("- ").append(skus.joinToString()).append('\n')
+                    }
+                }
             }
 
         private suspend fun referenceParts(catalog: List<CatalogItem>): List<ContentPart> {
