@@ -263,6 +263,23 @@ public class OpenRouterRecognizerTest {
         }
 
     @Test
+    public fun requestPromptIncludesEdgeCaseUncertaintyPolicies() =
+        runBlocking {
+            server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))
+
+            recognizer.recognize(image, catalog)
+
+            val prompt = recordedContentParts()[0].jsonObject["text"]!!.jsonPrimitive.content
+            assertTrue(prompt.contains("Occlusion:"))
+            assertTrue(prompt.contains("\"sku\": null"))
+            assertTrue(prompt.contains("\"occluded\": true"))
+            assertTrue(prompt.contains("Stacks:"))
+            assertTrue(prompt.contains("\"possiblyMore\": true"))
+            assertTrue(prompt.contains("Look-alikes:"))
+            assertTrue(prompt.contains("\"alternates\""))
+        }
+
+    @Test
     public fun requestAttachesLabeledReferencePhotosBeforeCaptureWhenCatalogIsUnderCap() =
         runBlocking {
             val coffeePhoto = photoStorage.save(jpegBytes(color = 0xFF7A3B00.toInt()), "coffee.jpg")

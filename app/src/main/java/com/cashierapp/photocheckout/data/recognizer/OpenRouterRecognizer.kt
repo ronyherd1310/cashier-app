@@ -27,7 +27,16 @@ private const val PROMPT =
         "Respond with JSON of the form " +
         "{\"items\":[{\"sku\":\"SKU-0001\",\"box\":[0.10,0.20,0.30,0.40],\"confidence\":0.0}]}. " +
         "Reference photos, when provided, show the actual packaging of catalog products; match the counter photo " +
-        "against them. Never invent SKUs and never include prices."
+        "against them. " +
+        "Occlusion: Count an item if you can identify it from the visible part. If it is only partially visible, " +
+        "set \"occluded\": true and lower its confidence. If you can see an item but cannot identify which catalog " +
+        "product it is, return it with \"sku\": null and a box; do not guess and do not omit it. " +
+        "Stacks: Items may be stacked or in rows. Count each visible unit by its rim, edge, or lid. If more units " +
+        "of the same product may be hidden behind or under what you can see, set \"possiblyMore\": true on one of " +
+        "that product's entries. " +
+        "Look-alikes: Some catalog products differ only by flavor, color, or size. When you are torn between " +
+        "specific SKUs, pick the best match and list close runner-up catalog SKUs in \"alternates\". " +
+        "Never invent SKUs and never include prices."
 
 /**
  * Cloud [Recognizer] backed by OpenRouter (OpenAI-compatible chat-completions). Sends
