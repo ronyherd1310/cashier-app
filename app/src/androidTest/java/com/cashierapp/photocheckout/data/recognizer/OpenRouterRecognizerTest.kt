@@ -175,6 +175,21 @@ public class OpenRouterRecognizerTest {
         }
 
     @Test
+    public fun requestPromptAsksForOneEntryPerPhysicalInstanceWithBox() =
+        runBlocking {
+            server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))
+
+            recognizer.recognize(image, catalog)
+
+            val prompt = recordedContentParts()[0].jsonObject["text"]!!.jsonPrimitive.content
+            assertTrue(prompt.contains("one entry per physical item instance"))
+            assertTrue(prompt.contains("[left, top, right, bottom]"))
+            assertTrue(prompt.contains("If you see three units of the same product, return three entries"))
+            assertTrue(prompt.contains("Use ONLY SKUs from the catalog list"))
+            assertTrue(prompt.contains("Never invent SKUs and never include prices"))
+        }
+
+    @Test
     public fun requestAttachesLabeledReferencePhotosBeforeCaptureWhenCatalogIsUnderCap() =
         runBlocking {
             val coffeePhoto = photoStorage.save(jpegBytes(color = 0xFF7A3B00.toInt()), "coffee.jpg")

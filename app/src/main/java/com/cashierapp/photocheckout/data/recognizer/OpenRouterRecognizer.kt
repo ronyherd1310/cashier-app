@@ -20,9 +20,12 @@ import kotlinx.serialization.json.Json
 private const val TAG = "OpenRouterRecognizer"
 
 private const val PROMPT =
-    "You are a cashier vision assistant. Identify which catalog items appear in the photo and how many of " +
-        "each. Use ONLY the SKUs from the catalog list. Respond with JSON of the form " +
-        "{\"items\":[{\"sku\":\"SKU-0001\",\"quantity\":1,\"confidence\":0.0}]}. confidence is 0..1. " +
+    "You are a cashier vision assistant. Return one entry per physical item instance you can see, not one " +
+        "entry per product type. For each instance give its bounding box as [left, top, right, bottom] with " +
+        "each value between 0 and 1 using a top-left origin, the matching catalog SKU, and a confidence 0..1. " +
+        "If you see three units of the same product, return three entries. Use ONLY SKUs from the catalog list. " +
+        "Respond with JSON of the form " +
+        "{\"items\":[{\"sku\":\"SKU-0001\",\"box\":[0.10,0.20,0.30,0.40],\"confidence\":0.0}]}. " +
         "Reference photos, when provided, show the actual packaging of catalog products; match the counter photo " +
         "against them. Never invent SKUs and never include prices."
 
