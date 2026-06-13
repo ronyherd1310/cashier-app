@@ -22,6 +22,7 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -245,6 +246,74 @@ public class OpenRouterRecognizerTest {
             assertTrue(body.contains("SKU-0001"))
             assertTrue(body.contains("Coffee"))
             assertEquals("Bearer test-key", recorded.getHeader("Authorization"))
+        }
+
+    @Test
+    public fun requestCatalogIncludesDescriptionSuffixOnlyForDescribedItems() =
+        runBlocking {
+            val describedCatalog =
+                listOf(
+                    catalog[0].copy(description = "brown wrapper, red CHOCO band"),
+                    catalog[1],
+                )
+            server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))
+
+            recognizer.recognize(image, describedCatalog)
+
+            val prompt = recordedContentParts()[0].jsonObject["text"]!!.jsonPrimitive.content
+            assertTrue(prompt.contains("SKU-0001 - Coffee | brown wrapper, red CHOCO band"))
+            assertTrue(prompt.contains("SKU-0002 - Tea\n"))
+            assertFalse(prompt.contains("SKU-0002 - Tea |"))
+        }
+
+    @Test
+    public fun requestCatalogIncludesLookAlikeGroupsForSharedTagsOnly() =
+        runBlocking {
+            val groupedCatalog =
+                listOf(
+                    catalog[0].copy(confusionGroup = "drink-sachets"),
+                    catalog[1].copy(confusionGroup = "drink-sachets"),
+                    CatalogItem(
+                        id = 3,
+                        sku = "SKU-0003",
+                        name = "Water",
+                        priceMinor = 8_000,
+                        active = true,
+                        photos = emptyList(),
+                        createdAtEpochMillis = 0L,
+                        confusionGroup = "singleton",
+                    ),
+                    CatalogItem(
+                        id = 4,
+                        sku = "SKU-0004",
+                        name = "Juice",
+                        priceMinor = 9_000,
+                        active = true,
+                        photos = emptyList(),
+                        createdAtEpochMillis = 0L,
+                        confusionGroup = "   ",
+                    ),
+                )
+            server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))
+
+            recognizer.recognize(image, groupedCatalog)
+
+            val prompt = recordedContentParts()[0].jsonObject["text"]!!.jsonPrimitive.content
+            assertTrue(prompt.contains("Look-alike groups (distinguish carefully by label color/text):"))
+            assertTrue(prompt.contains("- SKU-0001, SKU-0002"))
+            assertFalse(prompt.contains("SKU-0003,"))
+            assertFalse(prompt.contains("SKU-0004,"))
+        }
+
+    @Test
+    public fun requestCatalogOmitsLookAlikeGroupsWhenNoneQualify() =
+        runBlocking {
+            server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))
+
+            recognizer.recognize(image, catalog)
+
+            val prompt = recordedContentParts()[0].jsonObject["text"]!!.jsonPrimitive.content
+            assertFalse(prompt.contains("Look-alike groups"))
         }
 
     @Test
