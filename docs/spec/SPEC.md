@@ -115,7 +115,7 @@ The MVP is organized into three modules — **Catalogue**, **Scan**, **Sales** �
 - **Networking (cloud Recognizer impl):** Retrofit + OkHttp + kotlinx.serialization.
 - **Image handling:** Coil for display; downscale captures before sending (cost/latency control).
 - **Recognition (Phase 1 impl):** A cloud `Recognizer` backed by the **OpenRouter API** (OpenAI-compatible chat-completions with image input + structured/JSON output). This gives two layers of vendor-agnosticism: the **model is a config string** (e.g. `google/gemini-...`, `openai/...-mini`) swappable on OpenRouter without code changes, and the whole cloud impl sits behind the `Recognizer` interface so an on-device engine can replace it later. The cheapest vision model meeting the accuracy bar is selected/confirmed via the L6 benchmark. The OpenRouter API key lives in secure storage; no model id is referenced outside `data/recognizer/`.
-- **Catalog context strategy:** Per scan, pre-narrow the catalog to a candidate shortlist (rather than sending all 50–300 items) to cut token cost. The narrowing *signal* (recent/frequent items, cashier category pick, or a cheap first-pass) is a Plan-phase decision.
+- **Catalog context strategy:** Per scan, send the active catalog as a compact `{sku, name}` text list. For catalogs at or under the R1 cap (30 SKUs), also attach one labeled enrolled-reference thumbnail per SKU before the counter photo so the model can match against actual packaging. Above the cap, fall back to the text-only request; pre-narrowing remains the at-scale path.
 - **Recognition (Phase 2, out of MVP):** On-device image embeddings matching counter crops against the enrolled reference-photo gallery.
 
 ## Commands

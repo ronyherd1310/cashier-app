@@ -3,7 +3,9 @@
 > Source idea: `docs/ideas/scan-accuracy-improvements.md` (R1 only)
 > Parent spec: `docs/spec/SPEC.md` (Photo Checkout) — this spec inherits its commands,
 > project structure, code style, and boundaries; only deltas are stated here.
-> Status: Specify complete — open questions resolved at review 2026-06-12. Next: Plan.
+> Status: Implemented — reference thumbnails, request assembly, CI-safe look-alike
+> simulation, and self-skipping on-demand A/B check landed. Real owner-supplied
+> look-alike fixture photos and live provider measurements remain PR follow-ups.
 > Date: 2026-06-12
 
 ## Objective

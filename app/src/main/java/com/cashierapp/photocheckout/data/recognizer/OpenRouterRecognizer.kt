@@ -3,6 +3,7 @@ package com.cashierapp.photocheckout.data.recognizer
 import android.util.Base64
 import android.util.Log
 import com.cashierapp.photocheckout.data.config.RecognizerConfig
+import com.cashierapp.photocheckout.data.image.ReferenceThumbnailStore
 import com.cashierapp.photocheckout.data.recognizer.dto.ChatCompletionRequest
 import com.cashierapp.photocheckout.data.recognizer.dto.ChatMessage
 import com.cashierapp.photocheckout.data.recognizer.dto.ContentPart
@@ -14,7 +15,6 @@ import com.cashierapp.photocheckout.domain.model.CatalogItem
 import com.cashierapp.photocheckout.domain.recognizer.RecognizedItem
 import com.cashierapp.photocheckout.domain.recognizer.Recognizer
 import kotlinx.serialization.json.Json
-import javax.inject.Inject
 
 private const val TAG = "OpenRouterRecognizer"
 
@@ -22,7 +22,8 @@ private const val PROMPT =
     "You are a cashier vision assistant. Identify which catalog items appear in the photo and how many of " +
         "each. Use ONLY the SKUs from the catalog list. Respond with JSON of the form " +
         "{\"items\":[{\"sku\":\"SKU-0001\",\"quantity\":1,\"confidence\":0.0}]}. confidence is 0..1. " +
-        "Never invent SKUs and never include prices."
+        "Reference photos, when provided, show the actual packaging of catalog products; match the counter photo " +
+        "against them. Never invent SKUs and never include prices."
 
 /**
  * Cloud [Recognizer] backed by OpenRouter (OpenAI-compatible chat-completions). Sends
@@ -32,11 +33,12 @@ private const val PROMPT =
  * (SCAN-3, SCAN-9). All vendor/model detail stays in this package (X-2).
  */
 public class OpenRouterRecognizer
-    @Inject
     constructor(
         private val api: OpenRouterApi,
         private val config: RecognizerConfig,
         private val json: Json,
+        private val referenceThumbnailStore: ReferenceThumbnailStore,
+        private val referencePhotoSkuCap: Int = REFERENCE_PHOTO_SKU_CAP,
     ) : Recognizer {
         override suspend fun recognize(
             image: CapturedImage,
@@ -47,6 +49,16 @@ public class OpenRouterRecognizer
                 require(!apiKey.isNullOrBlank()) { "OpenRouter API key is not set." }
                 Log.d(TAG, "Requesting recognition: model=${config.modelId}, catalog=${catalog.size} items")
 
+                val referenceParts = referenceParts(catalog)
+                val requestContent =
+                    buildList {
+                        add(ContentPart(type = "text", text = PROMPT + "\n\n" + catalogContext(catalog)))
+                        addAll(referenceParts)
+                        if (referenceParts.isNotEmpty()) {
+                            add(ContentPart(type = "text", text = "Counter photo to itemize:"))
+                        }
+                        add(ContentPart(type = "image_url", imageUrl = ImageUrl(url = dataUrl(image))))
+                    }
                 val request =
                     ChatCompletionRequest(
                         model = config.modelId,
@@ -54,15 +66,14 @@ public class OpenRouterRecognizer
                             listOf(
                                 ChatMessage(
                                     role = "user",
-                                    content =
-                                        listOf(
-                                            ContentPart(type = "text", text = PROMPT + "\n\n" + catalogContext(catalog)),
-                                            ContentPart(type = "image_url", imageUrl = ImageUrl(url = dataUrl(image))),
-                                        ),
+                                    content = requestContent,
                                 ),
                             ),
                         responseFormat = ResponseFormat(type = "json_object"),
                     )
+                val requestBodyBytes = json.encodeToString(ChatCompletionRequest.serializer(), request).toByteArray().size
+                val attachedReferenceCount = referenceParts.count { it.imageUrl != null }
+                Log.d(TAG, "Reference photos attached=$attachedReferenceCount requestBytes=$requestBodyBytes")
 
                 val response = api.complete(authorization = "Bearer $apiKey", request = request)
                 val content =
@@ -92,6 +103,27 @@ public class OpenRouterRecognizer
                 append("Catalog:\n")
                 catalog.forEach { item -> append(item.sku).append(" - ").append(item.name).append('\n') }
             }
+
+        private suspend fun referenceParts(catalog: List<CatalogItem>): List<ContentPart> {
+            if (catalog.size > referencePhotoSkuCap) {
+                return emptyList()
+            }
+            val parts = mutableListOf<ContentPart>()
+            catalog.forEach { item ->
+                val primaryPhoto = item.photos.minByOrNull { it.position } ?: return@forEach
+                parts += ContentPart(type = "text", text = "${item.sku} \u2014 ${item.name}:")
+                val thumbnail = referenceThumbnailStore.thumbnailFor(primaryPhoto.path)
+                if (thumbnail != null) {
+                    parts += ContentPart(type = "image_url", imageUrl = ImageUrl(url = dataUrl(thumbnail)))
+                }
+            }
+            if (parts.isEmpty()) {
+                return emptyList()
+            }
+            return listOf(
+                ContentPart(type = "text", text = "Reference photos follow, one per labeled SKU. Then the counter photo."),
+            ) + parts
+        }
 
         private fun dataUrl(image: CapturedImage): String {
             val base64 = Base64.encodeToString(image.bytes, Base64.NO_WRAP)
