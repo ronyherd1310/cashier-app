@@ -6,7 +6,7 @@
 > Sibling specs: `docs/spec/scan-r1-reference-photos.md` (R1, implemented) and
 > `docs/spec/scan-r2-per-instance-detections.md` (R2). **R3 depends on R2** — it extends
 > the same response DTO, prompt, `RecognizedItem`, and `priceDraft` grouping R2 introduces.
-> Status: Approved — all open questions resolved at review (2026-06-13); ready to implement.
+> Status: Implemented (2026-06-13).
 > Date: 2026-06-13
 
 ## Objective
