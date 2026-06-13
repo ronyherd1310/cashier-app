@@ -208,6 +208,80 @@ public class PricingTest {
     }
 
     @Test
+    public fun nullSkuBecomesUnidentifiedNotDroppedOrPriced() {
+        val catalog = catalog(item("SKU-0001", 1_000))
+        val recognized =
+            listOf(
+                RecognizedItem(null, quantity = 1, confidence = 0.5f),
+                RecognizedItem(null, quantity = 2, confidence = 0.8f),
+            )
+
+        val draft = priceDraft(recognized, catalog)
+
+        assertTrue(draft.lines.isEmpty())
+        val unidentified = draft.unidentified.single()
+        assertEquals(null, unidentified.rawSku)
+        assertEquals(3, unidentified.quantity)
+        assertEquals(0.5f, unidentified.confidence)
+        assertEquals(0L, draft.totalMinor)
+    }
+
+    @Test
+    public fun mixedKnownAndNullSkuDetectionsGroupWithoutChangingMoneyMath() {
+        val catalog = catalog(item("SKU-0001", 10_000))
+        val recognized =
+            listOf(
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.9f),
+                RecognizedItem(null, quantity = 1, confidence = 0.4f),
+                RecognizedItem("SKU-0001", quantity = 1, confidence = 0.8f),
+            )
+
+        val draft = priceDraft(recognized, catalog)
+
+        val line = draft.lines.single()
+        assertEquals("SKU-0001", line.sku)
+        assertEquals(2, line.quantity)
+        assertEquals(10_000, line.unitPriceMinor)
+        assertEquals(20_000, line.lineTotalMinor)
+        assertEquals(20_000, draft.totalMinor)
+
+        val unidentified = draft.unidentified.single()
+        assertEquals(null, unidentified.rawSku)
+        assertEquals(1, unidentified.quantity)
+        assertEquals(0.4f, unidentified.confidence)
+    }
+
+    @Test
+    public fun uncertaintyFieldsDoNotAffectPricingOrConfidenceRule() {
+        val catalog = catalog(item("SKU-0001", 10_000))
+        val baseline =
+            priceDraft(
+                listOf(
+                    RecognizedItem("SKU-0001", quantity = 2, confidence = 0.7f),
+                ),
+                catalog,
+            )
+        val withUncertainty =
+            priceDraft(
+                listOf(
+                    RecognizedItem(
+                        sku = "SKU-0001",
+                        quantity = 2,
+                        confidence = 0.7f,
+                        occluded = true,
+                        possiblyMore = true,
+                        alternates = listOf("SKU-0002"),
+                    ),
+                ),
+                catalog,
+            )
+
+        assertEquals(baseline.lines.single(), withUncertainty.lines.single())
+        assertEquals(baseline.subtotalMinor, withUncertainty.subtotalMinor)
+        assertEquals(baseline.totalMinor, withUncertainty.totalMinor)
+    }
+
+    @Test
     public fun nonPositiveQuantityNormalizedToOne() {
         val catalog = catalog(item("SKU-0001", 2_000))
         val draft =
