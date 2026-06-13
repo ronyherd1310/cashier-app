@@ -160,6 +160,79 @@ public class OpenRouterRecognizerTest {
         }
 
     @Test
+    public fun uncertaintyFieldsAndCatalogAlternatesAreParsed() =
+        runBlocking {
+            val content =
+                """{\"items\":[""" +
+                    """{\"sku\":\"SKU-0001\",\"box\":[0.10,0.20,0.30,0.40],\"confidence\":0.61,""" +
+                    """\"occluded\":true,\"possiblyMore\":true,""" +
+                    """\"alternates\":[\"SKU-0002\",\"SKU-9999\"]}""" +
+                    """]}"""
+            server.enqueue(
+                MockResponse().setBody(
+                    """{"choices":[{"message":{"content":"$content"}}]}""",
+                ),
+            )
+
+            val result = recognizer.recognize(image, catalog)
+
+            assertTrue(result.isSuccess)
+            val item = result.getOrThrow().single()
+            assertEquals("SKU-0001", item.sku)
+            assertTrue(item.occluded)
+            assertTrue(item.possiblyMore)
+            assertEquals(listOf("SKU-0002"), item.alternates)
+        }
+
+    @Test
+    public fun nullSkuWithBoxParsesAsUnidentifiedDetection() =
+        runBlocking {
+            val content =
+                """{\"items\":[""" +
+                    """{\"sku\":null,\"box\":[0.05,0.60,0.20,0.80],\"confidence\":0.30}""" +
+                    """]}"""
+            server.enqueue(
+                MockResponse().setBody(
+                    """{"choices":[{"message":{"content":"$content"}}]}""",
+                ),
+            )
+
+            val result = recognizer.recognize(image, catalog)
+
+            assertTrue(result.isSuccess)
+            val item = result.getOrThrow().single()
+            assertEquals(null, item.sku)
+            val box = item.boundingBox
+            assertEquals(0.05f, box!!.left)
+            assertEquals(0.60f, box.top)
+            assertEquals(0.20f, box.right)
+            assertEquals(0.80f, box.bottom)
+        }
+
+    @Test
+    public fun r2ShapedResponseDefaultsUncertaintyFields() =
+        runBlocking {
+            val content =
+                """{\"items\":[""" +
+                    """{\"sku\":\"SKU-0001\",\"box\":[0.10,0.20,0.30,0.40],\"confidence\":0.91}""" +
+                    """]}"""
+            server.enqueue(
+                MockResponse().setBody(
+                    """{"choices":[{"message":{"content":"$content"}}]}""",
+                ),
+            )
+
+            val result = recognizer.recognize(image, catalog)
+
+            assertTrue(result.isSuccess)
+            val item = result.getOrThrow().single()
+            assertEquals("SKU-0001", item.sku)
+            assertEquals(false, item.occluded)
+            assertEquals(false, item.possiblyMore)
+            assertTrue(item.alternates.isEmpty())
+        }
+
+    @Test
     public fun requestEncodesImageAndCatalog() =
         runBlocking {
             server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"{\"items\":[]}"}}]}"""))

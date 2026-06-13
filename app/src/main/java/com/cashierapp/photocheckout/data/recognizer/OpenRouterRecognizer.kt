@@ -88,12 +88,16 @@ public class OpenRouterRecognizer
                         ?: error("No content in recognizer response.")
                 Log.d(TAG, "Raw response content: $content")
                 val payload = json.decodeFromString(RecognitionPayload.serializer(), content)
+                val catalogSkus = catalog.mapTo(HashSet()) { it.sku }
                 payload.items.map { dto ->
                     RecognizedItem(
                         sku = dto.sku,
                         quantity = dto.quantity,
                         confidence = dto.confidence,
                         boundingBox = dto.box?.toBoundingBoxOrNull(),
+                        occluded = dto.occluded,
+                        possiblyMore = dto.possiblyMore,
+                        alternates = dto.alternates.filter { it in catalogSkus },
                     )
                 }
             }.onSuccess { items ->
