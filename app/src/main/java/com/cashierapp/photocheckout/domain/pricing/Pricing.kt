@@ -30,6 +30,15 @@ public fun priceDraft(
 ): DraftReceipt {
     val lines = mutableListOf<DraftLine>()
     val unidentified = mutableListOf<UnidentifiedItem>()
+    val activeConfusionGroups =
+        catalog.values
+            .asSequence()
+            .filter(CatalogItem::active)
+            .mapNotNull { item -> item.confusionGroup?.takeIf(String::isNotBlank) }
+            .groupingBy { group -> group }
+            .eachCount()
+            .filterValues { count -> count >= 2 }
+            .keys
 
     for ((sku, detections) in recognized.groupBy { it.sku }) {
         val quantity = detections.sumOf { it.quantity.coerceAtLeast(1) }
@@ -51,7 +60,9 @@ public fun priceDraft(
                     unitPriceMinor = item.priceMinor,
                     lineTotalMinor = item.priceMinor * quantity,
                     confidence = confidence,
-                    lowConfidence = confidence < CONFIDENCE_THRESHOLD,
+                    lowConfidence =
+                        confidence < CONFIDENCE_THRESHOLD ||
+                            item.confusionGroup?.takeIf(String::isNotBlank) in activeConfusionGroups,
                     photoPath = item.photos.firstOrNull()?.path,
                 )
         }

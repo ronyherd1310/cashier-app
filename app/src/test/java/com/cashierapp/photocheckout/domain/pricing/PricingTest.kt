@@ -12,15 +12,18 @@ public class PricingTest {
     private fun item(
         sku: String,
         priceMinor: Long,
+        active: Boolean = true,
+        confusionGroup: String? = null,
     ): CatalogItem =
         CatalogItem(
             id = sku.hashCode().toLong(),
             sku = sku,
             name = "Item $sku",
             priceMinor = priceMinor,
-            active = true,
+            active = active,
             photos = emptyList(),
             createdAtEpochMillis = 0L,
+            confusionGroup = confusionGroup,
         )
 
     private fun catalog(vararg items: CatalogItem): Map<String, CatalogItem> = items.associateBy { it.sku }
@@ -185,6 +188,92 @@ public class PricingTest {
         val catalog = catalog(item("SKU-0001", 1_000))
         val draft = priceDraft(listOf(RecognizedItem("SKU-0001", 1, 0.6f)), catalog)
         assertFalse(draft.lines.single().lowConfidence)
+    }
+
+    @Test
+    public fun activeConfusionGroupForcesLowConfidenceForAllMemberSkus() {
+        val catalog =
+            catalog(
+                item("SKU-0001", 1_000, confusionGroup = "wafer-24g"),
+                item("SKU-0002", 1_200, confusionGroup = "wafer-24g"),
+            )
+        val draft =
+            priceDraft(
+                listOf(
+                    RecognizedItem("SKU-0001", quantity = 1, confidence = 0.95f),
+                    RecognizedItem("SKU-0002", quantity = 1, confidence = 0.95f),
+                ),
+                catalog,
+            )
+
+        assertTrue(draft.lines.first { it.sku == "SKU-0001" }.lowConfidence)
+        assertTrue(draft.lines.first { it.sku == "SKU-0002" }.lowConfidence)
+    }
+
+    @Test
+    public fun singletonNullAndBlankConfusionGroupsDoNotForceLowConfidence() {
+        val catalog =
+            catalog(
+                item("SKU-0001", 1_000, confusionGroup = "singleton"),
+                item("SKU-0002", 1_200, confusionGroup = null),
+                item("SKU-0003", 1_300, confusionGroup = ""),
+                item("SKU-0004", 1_400, confusionGroup = "   "),
+            )
+        val draft =
+            priceDraft(
+                listOf(
+                    RecognizedItem("SKU-0001", quantity = 1, confidence = 0.95f),
+                    RecognizedItem("SKU-0002", quantity = 1, confidence = 0.95f),
+                    RecognizedItem("SKU-0003", quantity = 1, confidence = 0.95f),
+                    RecognizedItem("SKU-0004", quantity = 1, confidence = 0.95f),
+                ),
+                catalog,
+            )
+
+        assertTrue(draft.lines.all { !it.lowConfidence })
+    }
+
+    @Test
+    public fun groupedSkuWithDeactivatedSiblingAbsentFromActiveCatalogIsNotForceFlagged() {
+        val activeCatalog =
+            catalog(
+                item("SKU-0001", 1_000, confusionGroup = "wafer-24g"),
+            )
+        val draft = priceDraft(listOf(RecognizedItem("SKU-0001", 1, 0.95f)), activeCatalog)
+
+        assertFalse(draft.lines.single().lowConfidence)
+    }
+
+    @Test
+    public fun confusionGroupForcedFlagDoesNotChangeMoneyMathOrUnidentifiedItems() {
+        val catalog =
+            catalog(
+                item("SKU-0001", 10_000, confusionGroup = "wafer-24g"),
+                item("SKU-0002", 12_000, confusionGroup = "wafer-24g"),
+            )
+        val draft =
+            priceDraft(
+                listOf(
+                    RecognizedItem("SKU-0001", quantity = 2, confidence = 0.95f),
+                    RecognizedItem("SKU-UNKNOWN", quantity = 3, confidence = 0.95f),
+                ),
+                catalog,
+                taxRateBps = 1_000,
+            )
+
+        val line = draft.lines.single()
+        assertTrue(line.lowConfidence)
+        assertEquals(2, line.quantity)
+        assertEquals(10_000L, line.unitPriceMinor)
+        assertEquals(20_000L, line.lineTotalMinor)
+        assertEquals(20_000L, draft.subtotalMinor)
+        assertEquals(2_000L, draft.taxMinor)
+        assertEquals(22_000L, draft.totalMinor)
+
+        val unidentified = draft.unidentified.single()
+        assertEquals("SKU-UNKNOWN", unidentified.rawSku)
+        assertEquals(3, unidentified.quantity)
+        assertEquals(0.95f, unidentified.confidence)
     }
 
     @Test
