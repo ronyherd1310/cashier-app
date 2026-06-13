@@ -9,4 +9,6 @@ public data class CatalogItem(
     val photos: List<ProductPhoto>,
     val createdAtEpochMillis: Long,
     val deactivatedAtEpochMillis: Long? = null,
+    val description: String? = null,
+    val confusionGroup: String? = null,
 )

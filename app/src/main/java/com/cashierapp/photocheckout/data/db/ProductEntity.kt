@@ -17,4 +17,6 @@ public data class ProductEntity(
     val active: Boolean,
     val createdAt: Long,
     val deactivatedAt: Long?,
+    val description: String? = null,
+    val confusionGroup: String? = null,
 )
