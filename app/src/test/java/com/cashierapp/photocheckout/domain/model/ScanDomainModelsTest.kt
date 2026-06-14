@@ -41,6 +41,18 @@ public class ScanDomainModelsTest {
     }
 
     @Test
+    public fun capturedImageEqualityIgnoresOriginalSource() {
+        val bytes = byteArrayOf(1, 2, 3)
+        val original = CapturedImage(bytes = byteArrayOf(9, 8, 7), width = 2048, height = 1536, mimeType = "image/jpeg")
+
+        val withoutOriginal = CapturedImage(bytes = bytes, width = 1024, height = 768, mimeType = "image/jpeg")
+        val withOriginal = CapturedImage(bytes = bytes, width = 1024, height = 768, mimeType = "image/jpeg", original = original)
+
+        assertEquals(withoutOriginal, withOriginal)
+        assertEquals(withoutOriginal.hashCode(), withOriginal.hashCode())
+    }
+
+    @Test
     public fun draftLineDefaultsNoteToNull() {
         val line =
             DraftLine(

@@ -9,7 +9,8 @@
 > `docs/spec/scan-r4-visual-descriptions-confusion-groups.md` (R4, implemented — `confusionGroup`,
 > descriptions, forced flag). **R5 depends on R2** (it crops the boxes R2 produces) and **consumes
 > R3 + R4 signals** to decide what to escalate; all three are on `main`.
-> Status: Draft — for review. Date: 2026-06-13
+> Status: Implemented. Date: 2026-06-13. Implementation branch:
+> `feat/scan-r5-two-pass-crop-escalation`.
 
 ## Objective
 

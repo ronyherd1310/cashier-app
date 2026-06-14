@@ -5,10 +5,12 @@ import androidx.room.Room
 import com.cashierapp.photocheckout.data.db.CashierDatabase
 import com.cashierapp.photocheckout.data.db.ProductDao
 import com.cashierapp.photocheckout.data.db.ProductRepository
+import com.cashierapp.photocheckout.data.image.AndroidImageCropper
 import com.cashierapp.photocheckout.data.image.AndroidImageDownscaler
 import com.cashierapp.photocheckout.data.storage.PhotoStorage
 import com.cashierapp.photocheckout.data.telemetry.LoggingScanTelemetry
 import com.cashierapp.photocheckout.domain.catalog.CatalogRepository
+import com.cashierapp.photocheckout.domain.image.ImageCropper
 import com.cashierapp.photocheckout.domain.image.ImageDownscaler
 import com.cashierapp.photocheckout.domain.telemetry.ScanTelemetry
 import dagger.Module
@@ -50,6 +52,9 @@ public object AppModule {
 
     @Provides
     public fun provideImageDownscaler(downscaler: AndroidImageDownscaler): ImageDownscaler = downscaler
+
+    @Provides
+    public fun provideImageCropper(cropper: AndroidImageCropper): ImageCropper = cropper
 
     @Provides
     public fun provideScanTelemetry(telemetry: LoggingScanTelemetry): ScanTelemetry = telemetry

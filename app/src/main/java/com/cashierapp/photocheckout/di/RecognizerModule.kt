@@ -6,6 +6,8 @@ import com.cashierapp.photocheckout.data.recognizer.OPENROUTER_BASE_URL
 import com.cashierapp.photocheckout.data.recognizer.OpenRouterApi
 import com.cashierapp.photocheckout.data.recognizer.OpenRouterRecognizer
 import com.cashierapp.photocheckout.data.recognizer.StubRecognizer
+import com.cashierapp.photocheckout.data.recognizer.TwoPassRecognizer
+import com.cashierapp.photocheckout.domain.image.ImageCropper
 import com.cashierapp.photocheckout.domain.recognizer.Recognizer
 import dagger.Module
 import dagger.Provides
@@ -71,5 +73,17 @@ public object RecognizerModule {
         config: RecognizerConfig,
         openRouter: Provider<OpenRouterRecognizer>,
         stub: Provider<StubRecognizer>,
-    ): Recognizer = if (config.hasApiKey()) openRouter.get() else stub.get()
+        cropper: ImageCropper,
+    ): Recognizer =
+        if (config.hasApiKey()) {
+            val cloudRecognizer = openRouter.get()
+            TwoPassRecognizer(
+                primary = cloudRecognizer,
+                verifier = cloudRecognizer,
+                cropper = cropper,
+                confidenceThreshold = config.confidenceThreshold,
+            )
+        } else {
+            stub.get()
+        }
 }
