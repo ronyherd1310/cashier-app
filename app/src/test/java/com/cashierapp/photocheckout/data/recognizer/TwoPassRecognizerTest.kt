@@ -44,9 +44,15 @@ public class TwoPassRecognizerTest {
                     item("MORE", confidence = 0.9f, boundingBox = box, possiblyMore = true),
                     item("NOBOX", confidence = 0.2f, boundingBox = null),
                 )
-            val verifier = RecordingRecognizer { call ->
-                listOf(item(call.catalog.first().sku, confidence = 0.99f))
-            }
+            val verifier =
+                RecordingRecognizer { call ->
+                    listOf(
+                        item(
+                            call.catalog.first().sku,
+                            confidence = 0.99f,
+                        ),
+                    )
+                }
 
             val result =
                 TwoPassRecognizer(
@@ -55,7 +61,16 @@ public class TwoPassRecognizerTest {
                     cropper = RecordingCropper(),
                 ).recognize(
                     image,
-                    catalog("LOW", "OCC", "GROUP-A", "GROUP-B", "PLAIN", "MORE", "NOBOX", grouped = setOf("GROUP-A", "GROUP-B")),
+                    catalog(
+                        "LOW",
+                        "OCC",
+                        "GROUP-A",
+                        "GROUP-B",
+                        "PLAIN",
+                        "MORE",
+                        "NOBOX",
+                        grouped = setOf("GROUP-A", "GROUP-B"),
+                    ),
                 )
 
             assertTrue(result.isSuccess)
@@ -70,13 +85,45 @@ public class TwoPassRecognizerTest {
                     item("GROUP-A", confidence = 0.2f, boundingBox = box, alternates = listOf("ALT")),
                     item(null, confidence = 0.2f, boundingBox = box),
                 )
-            val catalog = catalog("GROUP-A", "GROUP-B", "ALT", "PLAIN", inactive = setOf("INACTIVE"), grouped = setOf("GROUP-A", "GROUP-B"))
-            val verifier = RecordingRecognizer { call -> listOf(item(call.catalog.first().sku, confidence = 0.9f)) }
+            val catalog =
+                catalog(
+                    "GROUP-A",
+                    "GROUP-B",
+                    "ALT",
+                    "PLAIN",
+                    inactive = setOf("INACTIVE"),
+                    grouped = setOf("GROUP-A", "GROUP-B"),
+                )
+            val verifier =
+                RecordingRecognizer { call ->
+                    listOf(
+                        item(
+                            call.catalog.first().sku,
+                            confidence = 0.9f,
+                        ),
+                    )
+                }
 
-            TwoPassRecognizer(StaticRecognizer(Result.success(detections)), verifier, RecordingCropper()).recognize(image, catalog)
+            TwoPassRecognizer(
+                StaticRecognizer(Result.success(detections)),
+                verifier,
+                RecordingCropper(),
+            ).recognize(image, catalog)
 
-            assertEquals(setOf("GROUP-A", "GROUP-B", "ALT"), verifier.calls[0].catalog.map { it.sku }.toSet())
-            assertEquals(setOf("GROUP-A", "GROUP-B", "ALT", "PLAIN"), verifier.calls[1].catalog.map { it.sku }.toSet())
+            assertEquals(
+                setOf("GROUP-A", "GROUP-B", "ALT"),
+                verifier.calls[0]
+                    .catalog
+                    .map { it.sku }
+                    .toSet(),
+            )
+            assertEquals(
+                setOf("GROUP-A", "GROUP-B", "ALT", "PLAIN"),
+                verifier.calls[1]
+                    .catalog
+                    .map { it.sku }
+                    .toSet(),
+            )
         }
 
     @Test
@@ -92,7 +139,16 @@ public class TwoPassRecognizerTest {
                     possiblyMore = true,
                     alternates = listOf("NEW"),
                 )
-            val verifier = RecordingRecognizer { listOf(item("NEW", confidence = 0.99f, alternates = listOf("OLD"))) }
+            val verifier =
+                RecordingRecognizer {
+                    listOf(
+                        item(
+                            "NEW",
+                            confidence = 0.99f,
+                            alternates = listOf("OLD"),
+                        ),
+                    )
+                }
 
             val result =
                 TwoPassRecognizer(
@@ -134,7 +190,20 @@ public class TwoPassRecognizerTest {
                     }
                 }
 
-            val result = TwoPassRecognizer(StaticRecognizer(Result.success(detections)), verifier, cropper).recognize(image, catalog("CROP-NULL", "VERIFY-EMPTY", "VERIFY-ERROR", "OFF-CATALOG"))
+            val result =
+                TwoPassRecognizer(
+                    StaticRecognizer(Result.success(detections)),
+                    verifier,
+                    cropper,
+                ).recognize(
+                    image,
+                    catalog(
+                        "CROP-NULL",
+                        "VERIFY-EMPTY",
+                        "VERIFY-ERROR",
+                        "OFF-CATALOG",
+                    ),
+                )
 
             assertEquals(detections, result.getOrThrow())
         }
@@ -144,7 +213,12 @@ public class TwoPassRecognizerTest {
         runBlocking {
             val verifier = RecordingRecognizer()
 
-            val result = TwoPassRecognizer(StaticRecognizer(Result.failure(IllegalStateException("nope"))), verifier, RecordingCropper()).recognize(image, catalog("SKU-1"))
+            val result =
+                TwoPassRecognizer(
+                    StaticRecognizer(Result.failure(IllegalStateException("nope"))),
+                    verifier,
+                    RecordingCropper(),
+                ).recognize(image, catalog("SKU-1"))
 
             assertTrue(result.isFailure)
             assertEquals(0, verifier.calls.size)
@@ -273,8 +347,7 @@ public class TwoPassRecognizerTest {
             alternates = alternates,
         )
 
-    private fun BoundingBox.taggedFor(sku: String?): BoundingBox =
-        copy(left = skuTag(sku))
+    private fun BoundingBox.taggedFor(sku: String?): BoundingBox = copy(left = skuTag(sku))
 
     private fun catalog(
         vararg skus: String,
@@ -298,8 +371,7 @@ public class TwoPassRecognizerTest {
         val tagBySku = mutableMapOf<String?, Float>()
         val skuByTag = mutableMapOf<Float, String?>()
 
-        fun boxSku(box: BoundingBox): String? =
-            skuByTag[box.left]
+        fun boxSku(box: BoundingBox): String? = skuByTag[box.left]
 
         fun skuTag(sku: String?): Float {
             val existing = tagBySku[sku]
