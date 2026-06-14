@@ -12,3 +12,5 @@ public const val OPENROUTER_BASE_URL: String = "https://openrouter.ai/api/v1/"
 public const val REFERENCE_PHOTO_SKU_CAP: Int = 30
 
 public const val CROP_PADDING_FRACTION: Float = 0.1f
+
+public const val MAX_ESCALATIONS: Int = 6
