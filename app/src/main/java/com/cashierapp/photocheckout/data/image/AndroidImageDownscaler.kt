@@ -27,6 +27,13 @@ public class AndroidImageDownscaler
                 val source =
                     BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
                         ?: return@withContext CapturedImage(jpegBytes, width = 0, height = 0, mimeType = MIME_JPEG)
+                val original =
+                    CapturedImage(
+                        bytes = jpegBytes,
+                        width = source.width,
+                        height = source.height,
+                        mimeType = MIME_JPEG,
+                    )
                 val scaled = source.scaledToMaxEdge()
                 if (scaled !== source) {
                     source.recycle()
@@ -36,7 +43,14 @@ public class AndroidImageDownscaler
                         scaled.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, stream)
                         stream.toByteArray()
                     }
-                val result = CapturedImage(bytes = bytes, width = scaled.width, height = scaled.height, mimeType = MIME_JPEG)
+                val result =
+                    CapturedImage(
+                        bytes = bytes,
+                        width = scaled.width,
+                        height = scaled.height,
+                        mimeType = MIME_JPEG,
+                        original = original,
+                    )
                 scaled.recycle()
                 result
             }

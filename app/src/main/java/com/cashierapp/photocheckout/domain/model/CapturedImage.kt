@@ -9,6 +9,7 @@ public data class CapturedImage(
     val width: Int,
     val height: Int,
     val mimeType: String,
+    val original: CapturedImage? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
